@@ -5,17 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Euler_WPF"
         mc:Ignorable="d"
-        Title="Euler" Height="450" Width="800">
+        Title="Euler" Height="600" Width="800" MinWidth="600" MinHeight="200">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="10"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="10"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="10"/>
         </Grid.RowDefinitions>
@@ -25,6 +25,52 @@
                  Grid.Column="1"
                  Height="auto"
                  Grid.Row="1"
-                 Width="auto"/>
+                 Grid.RowSpan="2"
+                 Width="auto"
+                 SelectionChanged="ProblemListBox_SelectionChanged"/>
+
+        <Grid x:Name="CurrentProblemGrid"
+              Grid.Column="2"
+              Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="CurrentProblemTitleBlock"
+                   Grid.Row="0"
+                   Text="Problem title placeholder"
+                   FontSize="30"
+                   Margin="10,10,10,10"/>
+
+            <TextBlock x:Name="CurrentProblemDiscriptionBlock"
+                   Grid.Row="1"
+                   Text="Problem discription placeholder"
+                   FontSize="10"
+                   Margin="10,10,10,10"
+                   TextWrapping="Wrap"/>
+
+            <StackPanel x:Name="CurrentProblemSolutionStackPanel"
+                        Grid.Row="2"
+                        Orientation="Horizontal">
+                <Button x:Name="GetSolutionButton"
+                        Width="100"
+                        Margin="5,5,5,5"
+                        Content="Solution"
+                        Click="GetSolutionButton_Click"/>
+
+                <TextBlock x:Name="CurrentProblemSolutionBlock"
+                   Grid.Row="2"
+                   Text="Problem solution placeholder"
+                   FontSize="20"
+                   Margin="10,10,10,10"/>
+            </StackPanel>
+            
+            
+        </Grid>
+        
+        
+        
     </Grid>
 </Window>

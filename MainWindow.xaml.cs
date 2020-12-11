@@ -28,12 +28,20 @@ namespace Euler_WPF
             foreach (KeyValuePair<int,Problem> P in Problems.P)
             {
                 ListBoxItem p = new ListBoxItem();
-                p.Content = $"{P.Key} {P.Value.Title}";
+                StackPanel s = new StackPanel();
+                s.Orientation = Orientation.Horizontal;
+                s.Children.Add(new TextBlock() { Text = $"{P.Key}: " });
+                s.Children.Add(new TextBlock() { Text = P.Value.Title });
+                p.Content = s;
+                
                 ProblemListBox.Items.Add(p);
             }
+
+            // Initialize currentProblem
+            SetCurrentProblem(-1);
         }
 
-
+        #region Static classes
         static class Problems
         // This class contains the information pertaining to the all the problems.
         {
@@ -51,25 +59,6 @@ namespace Euler_WPF
                         "If we list all the natural numbers below 10 that are multiples of 3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.\n" +
                         "Find the sum of all the multiples of 3 or 5 below 1000.",
                         964994, 5, Sol_1)
-                    },
-
-                    {
-                        7,
-                        new Problem("10001st prime",
-                        "By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.\n" +
-                        "What is the 10 001st prime number?",
-                        421486, 5, Sol_7)
-                    },
-
-                    {
-                        31,
-                        new Problem("Coin sums",
-                        "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
-                        "1p, 2p, 5p, 10p, 20p, 50p, £1 (100p), and £2 (200p).\n" +
-                        "It is possible to make £2 in the following way:\n" +
-                        "1×£1 + 1×50p + 2×20p + 1×5p + 1×2p + 3×1p\n" +
-                        "How many different ways can £2 be made using any number of coins?",
-                        84093, 5, Sol_31)
                     },
 
                     {
@@ -116,6 +105,14 @@ namespace Euler_WPF
                         "3025-385 = 2640\n" +
                         "Find the difference between the sum of the squares of the first one hundred natural numbers and the square of the sum.",
                         493325, 5, Sol_6)
+                    },
+
+                    {
+                        7,
+                        new Problem("10001st prime",
+                        "By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.\n" +
+                        "What is the 10 001st prime number?",
+                        421486, 5, Sol_7)
                     },
 
                     {
@@ -210,6 +207,17 @@ namespace Euler_WPF
                         "We can see that 28 is the first triangle number to have over five divisors.\n" +
                         "What is the value of the first triangle number to have over five hundred divisors?",
                         220974, 5, Sol_12)
+                    },
+
+                    {
+                        31,
+                        new Problem("Coin sums",
+                        "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
+                        "1p, 2p, 5p, 10p, 20p, 50p, £1 (100p), and £2 (200p).\n" +
+                        "It is possible to make £2 in the following way:\n" +
+                        "1×£1 + 1×50p + 2×20p + 1×5p + 1×2p + 3×1p\n" +
+                        "How many different ways can £2 be made using any number of coins?",
+                        84093, 5, Sol_31)
                     }
                 };
             }
@@ -778,6 +786,7 @@ namespace Euler_WPF
                 largestChecked = n;
             }
         }
+        #endregion
 
         #region Misc functions
 
@@ -978,5 +987,45 @@ namespace Euler_WPF
         }
 
         #endregion
+
+        #region WPF Interaction functions
+        private void ProblemListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // If nothing is selected, set the currentProblemGrid to display the default message
+            if (ProblemListBox.SelectedItem == null)
+            {
+                SetCurrentProblem(-1);
+            } else
+            {
+                SetCurrentProblem(Problems.P.Keys.ToList()[ProblemListBox.SelectedIndex]);
+            }
+        }
+
+        private void SetCurrentProblem(int pIndex)
+        {
+            if (pIndex == -1)
+            {
+                CurrentProblemTitleBlock.Text = "Welcome to Project Euler";
+                CurrentProblemDiscriptionBlock.Text = "Select any problem to view it's contents.";
+                GetSolutionButton.Visibility = Visibility.Hidden;
+                
+            } else
+            {
+                CurrentProblemTitleBlock.Text = Problems.P[pIndex].Title;
+                CurrentProblemDiscriptionBlock.Text = Problems.P[pIndex].Discription;
+                GetSolutionButton.Visibility = Visibility.Visible;
+            }
+            CurrentProblemSolutionBlock.Text = "";
+        }
+        #endregion
+
+        private void GetSolutionButton_Click(object sender, RoutedEventArgs e)
+        {
+            // If something selected 
+            if (ProblemListBox.SelectedItem != null)
+            {
+                CurrentProblemSolutionBlock.Text = Problems.P[Problems.P.Keys.ToList()[ProblemListBox.SelectedIndex]].Solution();
+            }
+        }
     }
 }
