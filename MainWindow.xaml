@@ -15,7 +15,6 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="10"/>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="10"/>
         </Grid.RowDefinitions>
@@ -29,48 +28,51 @@
                  Width="auto"
                  SelectionChanged="ProblemListBox_SelectionChanged"/>
 
-        <Grid x:Name="CurrentProblemGrid"
-              Grid.Column="2"
-              Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock x:Name="CurrentProblemTitleBlock"
+        <ScrollViewer x:Name="CurrentProblemScrlV"
+                      Grid.Column="2"
+                      Grid.Row="1">
+            <StackPanel>
+                <TextBlock x:Name="CurrentProblemTitleBlock"
                    Grid.Row="0"
                    Text="Problem title placeholder"
                    FontSize="30"
                    Margin="10,10,10,10"/>
 
-            <TextBlock x:Name="CurrentProblemDiscriptionBlock"
-                   Grid.Row="1"
+
+                <TextBlock x:Name="CurrentProblemDiscriptionBlock"
+                   
                    Text="Problem discription placeholder"
                    FontSize="10"
                    Margin="10,10,10,10"
                    TextWrapping="Wrap"/>
 
-            <StackPanel x:Name="CurrentProblemSolutionStackPanel"
+
+                <StackPanel x:Name="CurrentProblemSolutionStackPanel"
                         Grid.Row="2"
                         Orientation="Horizontal">
-                <Button x:Name="GetSolutionButton"
+                    
+                    <Button x:Name="GetSolutionButton"
                         Width="100"
                         Margin="5,5,5,5"
-                        Content="Solution"
-                        Click="GetSolutionButton_Click"/>
-
-                <TextBlock x:Name="CurrentProblemSolutionBlock"
-                   Grid.Row="2"
-                   Text="Problem solution placeholder"
-                   FontSize="20"
-                   Margin="10,10,10,10"/>
+                        Click="GetSolutionButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Solution"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"/>
+                            <Polygon Points="0,0 10,8, 0,16" 
+                                     Stroke="Black" 
+                                     Fill="Black" />
+                        </StackPanel>
+                    </Button>
+                    
+                    <TextBlock x:Name="CurrentProblemSolutionBlock"
+                               Grid.Row="2"
+                               Text="Problem solution placeholder"
+                               FontSize="20"
+                               Margin="10,10,10,10"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
             </StackPanel>
-            
-            
-        </Grid>
-        
-        
-        
+        </ScrollViewer>
     </Grid>
 </Window>
