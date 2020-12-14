@@ -317,6 +317,19 @@ namespace Euler_WPF
                     },
 
                     {
+                        14,
+                        new Problem("Longest Collatz sequence",
+                        "The following iterative sequence is defined for the set of positive integers:\n" +
+                        "n → n/2 (n is even)\n" +
+                        "n → 3n + 1 (n is odd)\n" +
+                        "Using the rule above and starting with 13, we generate the following sequence:\n" +
+                        "13 → 40 → 20 → 10 → 5 → 16 → 8 → 4 → 2 → 1\n" +
+                        "It can be seen that this sequence (starting at 13 and finishing at 1) contains 10 terms. Although it has not been proved yet (Collatz Problem), it is thought that all starting numbers finish at 1.\n" +
+                        "Which starting number, under one million, produces the longest chain?",
+                        226682, 5, Sol_14)
+                    },
+
+                    {
                         31,
                         new Problem("Coin sums",
                         "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
@@ -868,8 +881,57 @@ namespace Euler_WPF
                         }
                     }
                 }
-
                 return $"First ten digits are: {sum.ToString().Substring(0, ansLen)}";
+            }
+
+            public static string Sol_14()
+            {
+                //Longest Collatz sequence
+
+                // n → n / 2(n is even)
+                // n → 3n + 1(n is odd)
+
+                int upperLimit = 1000000;
+
+                // Big array will store the length of the sequence for n to go to 1 at index n.
+                int[] seqLengthArray = new int[upperLimit];
+
+                seqLengthArray[1] = 1;
+
+                // We loop over every number under 1000000 and run through the sequence
+                // unless we come across a number for which the length of the sequence
+                // is allready known. 0 and 1 will have a seqLength of 0.
+                for (int i=2; i<upperLimit; i++)
+                {
+                    long n = i;
+                    while(true)
+                    {
+                        if (i == 113383)
+                        {
+                            int a = 1;
+                        }
+                        // If the length of the sequence is known from here (initialized to 0), we add it to the current and break.
+                        if (n < upperLimit && seqLengthArray[n] != 0)
+                        {
+                            seqLengthArray[i] += seqLengthArray[n];
+                            break;
+                        }
+                        // The collatz choice
+                        if (n % 2 == 0)
+                        {
+                            n /= 2;
+                        } else
+                        {
+                            n *= 3;
+                            n += 1;
+                        }
+                        // Add 1 step
+                        seqLengthArray[i] += 1;
+                    }
+                }
+                int max = seqLengthArray.Max();
+                int maxI = Array.IndexOf(seqLengthArray, max);
+                return $"Found highest sequence length: {max} for n: {maxI}\nWith steps:\n{String.Join("\n", getCollatz(maxI).Select(p => p.ToString()).ToArray()) }";
             }
 
             public static string Sol_31()
@@ -1087,6 +1149,32 @@ namespace Euler_WPF
                 genDivisors(divisor + 1, divisor, primeFactors);
                 divisor *= primeFactors[primeFactorI];
             }
+        }
+
+        public static long[] getCollatz(long n)
+        {
+            List<long> r = new List<long>();
+
+            while (n>1)
+            {
+                // Add step
+                r.Add(n);
+
+                // The collatz choice
+                if (n % 2 == 0)
+                {
+                    n /= 2;
+                }
+                else
+                {
+                    n *= 3;
+                    n += 1;
+                }
+            }
+
+            r.Add(1);
+
+            return r.ToArray();
         }
 
 
