@@ -12,6 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Text.RegularExpressions;
+using ExtensionMethods;
+
 
 namespace Euler_WPF
 {
@@ -20,9 +23,15 @@ namespace Euler_WPF
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Global variables
+        System.Diagnostics.Stopwatch stopWatch;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            // Init stopwatch
+            stopWatch = new System.Diagnostics.Stopwatch();
 
             // Initialize ProblemListBox
             foreach (KeyValuePair<int,Problem> P in Problems.P)
@@ -330,6 +339,14 @@ namespace Euler_WPF
                     },
 
                     {
+                        15,
+                        new Problem("Lattice paths",
+                        "Starting in the top left corner of a 2×2 grid, and only being able to move to the right and down, there are exactly 6 routes to the bottom right corner.\n" +
+                        "How many such routes are there through a 20×20 grid?",
+                        186737, 5, Sol_15)
+                    },
+
+                    {
                         31,
                         new Problem("Coin sums",
                         "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
@@ -342,7 +359,7 @@ namespace Euler_WPF
                 };
             }
 
-            public static string Sol_1()
+            public static string[] Sol_1()
             {
                 // Multiples of 3 and 5
 
@@ -357,10 +374,10 @@ namespace Euler_WPF
                         total += i;
                     }
                 }
-                return $"Answer: {total}";
+                return new string[] { $"{total}", "" };
             }
 
-            public static string Sol_2() // Even Fibbonachi numbers
+            public static string[] Sol_2() // Even Fibbonachi numbers
             {
                 List<int> Fib = new List<int>() { 1, 2 };
                 int target = 4000000;
@@ -374,20 +391,20 @@ namespace Euler_WPF
                         total += nextFib;
                     }
                 }
-                return $"Answer: {total}";
+                return new string[] { $"{total}", "" };
             }
 
-            public static string Sol_3()
+            public static string[] Sol_3()
             {
                 //Largest prime factor
                 long numToFactor = 600851475143;
 
                 // Get factors
                 Dictionary<int, int> factors = Prime.GetPrimeFactors(numToFactor);
-                return $"Answer: {factors.Max()}";
+                return new string[] { $"{factors.Max()}", "" };
             }
 
-            public static string Sol_4()
+            public static string[] Sol_4()
             {
                 //Largest palindrome product
 
@@ -424,17 +441,17 @@ namespace Euler_WPF
                             if ((palindrome / i).ToString().Length == Multdigits) // If the division creates a 3-digit number.
                             {
                                 //Console.WriteLine(String.Format("Palindrome {0} can be made using {1} x {2}",palindrome,i,palindrome / i));
-                                return $"Answer: {palindrome}"; // Return the succesfull palindrome.
+                                return new string[] { $"{palindrome}", "" }; // Return the succesfull palindrome.
                             }
                         }
                     }
                     palindrome = GetLargestPalinDromeBelow(palindrome - 1);
                 }
                 // No solution was found.
-                return "No solution was found.";
+                return new string[] { "No solution was found.", "I guess something went wrong..." };
             }
 
-            public static string Sol_5()
+            public static string[] Sol_5()
             {
                 // Smallest multiple
 
@@ -443,10 +460,10 @@ namespace Euler_WPF
                 {
                     ns.Add(i);
                 }
-                return $"Answer: {LowestCommonMultiple(ns)}";
+                return new string[] { $"{LowestCommonMultiple(ns)}", "" };
             }
 
-            public static string Sol_6()
+            public static string[] Sol_6()
             {
                 // Sum square difference
 
@@ -459,15 +476,15 @@ namespace Euler_WPF
                     sum += i;
                 }
                 double squareOfSum = Math.Pow(sum, 2);
-                return $"Answer: {Math.Abs(squareOfSum - sumOfQuares)}";
+                return new string[] { $"{Math.Abs(squareOfSum - sumOfQuares)}", $"Square of sums: {squareOfSum}\nSum of squares: {sumOfQuares}" };
             }
 
-            public static string Sol_7() // 10001st prime
+            public static string[] Sol_7() // 10001st prime
             {
-                return $"Answer: {Prime.GetPrimeAtIndex(10000)}"; // See also the static class 'Prime'
+                return new string[] { $"{Prime.GetPrimeAtIndex(10000)}", "" }; // See also the static class 'Prime'
             }
 
-            public static string Sol_8()
+            public static string[] Sol_8()
             {
                 int lengthOfProduct = 13;
 
@@ -540,10 +557,10 @@ namespace Euler_WPF
                         highestTotal = subTotal;
                     }
                 }
-                return $"Highest total ({highestTotal}) found at ...";
+                return new string[] { $"{highestTotal}", $"Found at: { 0 }" };
             }
 
-            public static string Sol_9()
+            public static string[] Sol_9()
             {
                 // Special Pythagorean triplet
 
@@ -560,7 +577,7 @@ namespace Euler_WPF
                             triplet = GetPythagorianTriplet(m, n, k);
                             if (triplet.Sum() == 1000)
                             {
-                                return $"{triplet[0]} * {triplet[1]} * {triplet[2]} = {triplet[0] * triplet[1] * triplet[2]}";
+                                return new string[] { $"{triplet[0] * triplet[1] * triplet[2]}", $"({triplet[0]} * {triplet[1]} * {triplet[2]})" };
                             }
                         }
                         if (triplet.Sum() > 1000)
@@ -572,7 +589,7 @@ namespace Euler_WPF
                 //break;
             }
 
-            public static string Sol_10()
+            public static string[] Sol_10()
             {
                 // Find the sum of all the primes below two million.
 
@@ -593,10 +610,10 @@ namespace Euler_WPF
                     sum += P;
                 }
                 // Return
-                return $"Answer: {sum}";
+                return new string[] { $"{sum}", "" };
             }
 
-            public static string Sol_11()
+            public static string[] Sol_11()
             {
                 // Largest product in a grid
 
@@ -684,10 +701,10 @@ namespace Euler_WPF
                         }
                     }
                 }
-                return $"Largest product ({largestProductSoFar}) found at ({largestProdInfo[0]},{largestProdInfo[1]}), dir: ({largestProdInfo[2]},{largestProdInfo[3]}))";
+                return new string[] { $"{largestProductSoFar}", $"Found at: ({largestProdInfo[0]},{largestProdInfo[1]}), dir: ({largestProdInfo[2]},{largestProdInfo[3]})" };
             }
 
-            public static string Sol_12()
+            public static string[] Sol_12()
             {
                 // What is the value of the first triangle number to have over five hundred divisors?
 
@@ -721,7 +738,7 @@ namespace Euler_WPF
                     {
                         highestDivAm = divAm;
                         int t = (n * (n + 1)) / 2;
-                        Console.WriteLine($"n: {n}, t: {t}, divAm: {divAm}");
+                        //Console.WriteLine($"n: {n}, t: {t}, divAm: {divAm}");
                     }
 
 
@@ -730,22 +747,22 @@ namespace Euler_WPF
                     {
                         int t = (n * (n + 1)) / 2;
                         CalcDivisorsOfN(t);
-                        string s = $"Found triangular number #{n}: {t} with divisors:\n";
+
+                        string s = $"Divisors: ({divAm})\n";
 
                         foreach (int d in divisorsOfN[t])
                         {
-                            s += $"{d},";
+                            s += $"{d}, ";
                         }
 
-                        s.Remove(s.Length - 1);
-                        s += ".";
+                        s.Remove(s.Length - 2);
 
-                        return s;
+                        return new string[] { $"{t}", $"{s}" };
                     }
                 }
             }
 
-            public static string Sol_13()
+            public static string[] Sol_13()
             {
                 // Large sum
 
@@ -881,10 +898,10 @@ namespace Euler_WPF
                         }
                     }
                 }
-                return $"First ten digits are: {sum.ToString().Substring(0, ansLen)}";
+                return new string[] { $"{sum.ToString().Substring(0, ansLen)}", "" };
             }
 
-            public static string Sol_14()
+            public static string[] Sol_14()
             {
                 //Longest Collatz sequence
 
@@ -906,10 +923,6 @@ namespace Euler_WPF
                     long n = i;
                     while(true)
                     {
-                        if (i == 113383)
-                        {
-                            int a = 1;
-                        }
                         // If the length of the sequence is known from here (initialized to 0), we add it to the current and break.
                         if (n < upperLimit && seqLengthArray[n] != 0)
                         {
@@ -931,10 +944,153 @@ namespace Euler_WPF
                 }
                 int max = seqLengthArray.Max();
                 int maxI = Array.IndexOf(seqLengthArray, max);
-                return $"Found highest sequence length: {max} for n: {maxI}\nWith steps:\n{String.Join("\n", getCollatz(maxI).Select(p => p.ToString()).ToArray()) }";
+                return new string[] { $"{maxI}", $"Found highest sequence length: { max }\nWith steps:\n{ String.Join("\n", getCollatz(maxI).Select(p => p.ToString()).ToArray()) }" };
             }
 
-            public static string Sol_31()
+            public static Object[] Sol_15()
+            {
+                //Lattice paths
+                int x = 20;
+
+                long[,] pathAmount = new long[x+1,x+1];
+
+                for (int i=0; i < x+1; i++)
+                {
+
+                    for (int j=0; j < x + 1; j++)
+                    {
+                        if (i==0 || j == 0)
+                        {
+                            pathAmount[i, j] = 1;
+                        }
+                        else
+                        {
+                            pathAmount[i, j] = pathAmount[i-1, j] + pathAmount[i, j-1];
+                        }
+                    }
+                }
+
+                /// Now we construct the discription object
+                /// 
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                // Text
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "The key to this solution that I found is to walk along the lattice " +
+                    "while counting the ways to reach each lattice node.\n" +
+                    "\n" +
+                    "For a 3x3 grid, the grid of nodes is 4x4. Working it out will result in the table below.",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                // Table
+                Grid g3 = new Grid() { Margin = new Thickness(10, 10, 10, 10)};
+                int s = 3;
+                for (int colI=0; colI <= s; colI++)
+                {
+                    g3.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+                    g3.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+
+                    for (int rowI=0; rowI <= s; rowI++)
+                    {
+                        // Text
+                        TextBlock tB = new TextBlock() { Text = $"{pathAmount[colI, rowI]}", Margin = new Thickness(10,10,10,10) };
+                        Grid.SetRow(tB, rowI);
+                        Grid.SetColumn(tB, colI);
+                        g3.Children.Add(tB);
+
+                        // Rect
+                        Rectangle r = new Rectangle();
+                        r.Fill = new SolidColorBrush(Colors.Transparent);
+                        r.Stroke = new SolidColorBrush(Colors.Black);
+                        Grid.SetRow(r, rowI);
+                        Grid.SetColumn(r, colI);
+
+                        g3.Children.Add(r);
+                    }
+                }
+                g3.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                sDiscSP.Children.Add(g3);
+
+                // Text
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "As can be seen in the table above, the amount of ways to reach the bottom-right node is 20.\n" +
+                    "Secondly, there is only 1 way to reach the nodes on the top row and on the left column.\n" +
+                    "Thirdly, for every node that is now on the top row or on the left column, the amount of ways to reach it " +
+                    "is simply the sum of the ways to reach the nodes that feed into it: it's above- and left-side neighbours.\n" +
+                    "\nThe table used to determine the ways to traverse a 20x20 lattice is shown below.",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                // Table
+                Grid g = new Grid() { Margin = new Thickness(10, 10, 10, 10) };
+                s = 20;
+                for (int colI = 0; colI <= s; colI++)
+                {
+                    g.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+                    g.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+
+                    for (int rowI = 0; rowI <= s; rowI++)
+                    {
+                        // Rect
+                        Rectangle r = new Rectangle
+                        {
+                            Fill = new SolidColorBrush(Colors.Transparent),
+                            Stroke = new SolidColorBrush(Colors.Black)
+                        };
+                        if (colI == rowI)
+                        {
+                            r.Fill = new SolidColorBrush(Colors.Gray);
+                        }
+                        Grid.SetRow(r, rowI);
+                        Grid.SetColumn(r, colI);
+                        g.Children.Add(r);
+
+                        // Text
+                        TextBlock tB = new TextBlock() { Text = $"{pathAmount[colI, rowI]}", Margin = new Thickness(10, 10, 10, 10) };
+                        Grid.SetRow(tB, rowI);
+                        Grid.SetColumn(tB, colI);
+                        g.Children.Add(tB);
+                    }
+                }
+                g.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+                sDiscSP.Children.Add(g);
+
+                // More text
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "Further observation yields more patterns: the values on any row (below the first) are the cumulative sum of the row above it." +
+                    "Below is a function...",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+
+                // More text
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "As can be seen in the table above, this problem can be simplified to solving 20" + "".PadRight(20,'!') + ".\n" +
+                    "A function was created for this purpose.",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                // Function (somehow)
+
+
+                // More text
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = $"FactorialRecurse(20,20) gives: {Enumerable.Range(1,21).Select(item => (long)item).ToArray().CumCumSum(19).Last()}.",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                // Return
+                return new Object[] { $"{pathAmount[x,x]}", sDiscSP };
+            }
+
+            public static string[] Sol_31()
             {
                 // Coin sums
 
@@ -953,7 +1109,7 @@ namespace Euler_WPF
                         waysToMake[t] += waysToMake[t - coin];
                     }
                 }
-                return $"Answer: {waysToMake[200]}";
+                return new string[] { $"{waysToMake[200]}" , ""};
             }
         }
 
@@ -961,9 +1117,9 @@ namespace Euler_WPF
         {
             public int Difficulty, Solved_by;
             public string Title, Discription;
-            public Func<string> Solution;
+            public Func<Object[]> Solution;
 
-            public Problem(string Title_, string Discription_, int Solved_by_, int Difficulty_, Func<string> Solution_)
+            public Problem(string Title_, string Discription_, int Solved_by_, int Difficulty_, Func<Object[]> Solution_)
             {
                 this.Title = Title_;
                 this.Discription = Discription_;
@@ -1177,10 +1333,6 @@ namespace Euler_WPF
             return r.ToArray();
         }
 
-
-
-
-
         public static string ReverseString(string s)
         // This function reverses a string
         {
@@ -1346,14 +1498,14 @@ namespace Euler_WPF
                 CurrentProblemTitleBlock.Text = "Welcome to Project Euler";
                 CurrentProblemDiscriptionBlock.Text = "Select any problem to view it's contents.";
                 GetSolutionButton.Visibility = Visibility.Hidden;
-                
             } else
             {
                 CurrentProblemTitleBlock.Text = Problems.P[pIndex].Title;
                 CurrentProblemDiscriptionBlock.Text = Problems.P[pIndex].Discription;
                 GetSolutionButton.Visibility = Visibility.Visible;
             }
-            CurrentProblemSolutionBlock.Text = "";
+            //CurrentProblemSolutionBlock.Visibility = Visibility.Hidden;
+            //CurrentProblemSolutionExpantionSP.Visibility = Visibility.Hidden;
         }
         
         private void GetSolutionButton_Click(object sender, RoutedEventArgs e)
@@ -1361,9 +1513,20 @@ namespace Euler_WPF
             // If something selected 
             if (ProblemListBox.SelectedItem != null)
             {
-                CurrentProblemSolutionBlock.Text = Problems.P[Problems.P.Keys.ToList()[ProblemListBox.SelectedIndex]].Solution();
+                stopWatch.Start();
+                Object[] solution = Problems.P[Problems.P.Keys.ToList()[ProblemListBox.SelectedIndex]].Solution();
+                stopWatch.Stop();
+
+                CurrentProblemSolutionBlock.Text = solution[0] + $" ({stopWatch.ElapsedMilliseconds}ms)";
+                stopWatch.Reset();
+
+                CurProbSP.Children.Add((StackPanel)solution[1]);
+
+                //CurrentProblemSolutionBlock.Visibility = Visibility.Visible;
+                //CurrentProblemSolutionExpantionSP.Visibility = Visibility.Visible;
             }
         }
         #endregion
     }
 }
+
