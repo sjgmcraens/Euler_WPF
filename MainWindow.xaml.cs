@@ -23,15 +23,15 @@ namespace Euler_WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        // Global variables
-        System.Diagnostics.Stopwatch stopWatch;
+        /// Global variables
+        //System.Diagnostics.Stopwatch stopWatch;
 
         public MainWindow()
         {
             InitializeComponent();
 
             // Init stopwatch
-            stopWatch = new System.Diagnostics.Stopwatch();
+            //stopWatch = new System.Diagnostics.Stopwatch();
 
             // Initialize ProblemListBox
             foreach (KeyValuePair<int,Problem> P in Problems.P)
@@ -56,9 +56,11 @@ namespace Euler_WPF
         {
             // Dictinairy of problems
             public static readonly Dictionary<int, Problem> P;
+            private static System.Diagnostics.Stopwatch SW;
 
             static Problems() // This is the constructor: below, we fill 'P' and add methods for returning the solution to the problems.
             {
+                SW = new System.Diagnostics.Stopwatch();
 
                 P = new Dictionary<int, Problem>
                 {
@@ -344,6 +346,14 @@ namespace Euler_WPF
                         "Starting in the top left corner of a 2×2 grid, and only being able to move to the right and down, there are exactly 6 routes to the bottom right corner.\n" +
                         "How many such routes are there through a 20×20 grid?",
                         186737, 5, Sol_15)
+                    },
+
+                    {
+                        16,
+                        new Problem("Power digit sum",
+                        "215 = 32768 and the sum of its digits is 3 + 2 + 7 + 6 + 8 = 26.\n" +
+                        "What is the sum of the digits of the number 21000?",
+                        229085, 5, Sol_16)
                     },
 
                     {
@@ -949,33 +959,44 @@ namespace Euler_WPF
 
             public static Object[] Sol_15()
             {
+                #region Solution
+
+                SW.Reset();
+                SW.Start();
+
                 //Lattice paths
                 int x = 20;
 
                 long[,] pathAmount = new long[x+1,x+1];
 
-                for (int i=0; i < x+1; i++)
+                for (int rI = 0; rI < x + 1; rI++)
                 {
 
-                    for (int j=0; j < x + 1; j++)
+                    for (int cI = rI; cI < x + 1; cI++)
                     {
-                        if (i==0 || j == 0)
+                        if (rI == 0)
                         {
-                            pathAmount[i, j] = 1;
+                            pathAmount[rI, cI] = 1;
                         }
-                        else
+                        else if (rI == cI)
                         {
-                            pathAmount[i, j] = pathAmount[i-1, j] + pathAmount[i, j-1];
+                            pathAmount[rI, cI] = 2 * pathAmount[rI - 1, cI];
+                        } else
+                        {
+                            pathAmount[rI, cI] = pathAmount[rI-1, cI] + pathAmount[rI, cI-1];
                         }
                     }
                 }
+                long solution = pathAmount[x, x];
+                SW.Stop();
 
-                /// Now we construct the discription object
-                /// 
+                #endregion
+
+                #region Solution discription
 
                 StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
 
-                // Text
+                #region Solution discription text 2
                 sDiscSP.Children.Add(new TextBlock()
                 {
                     Text = "The key to this solution that I found is to walk along the lattice " +
@@ -984,8 +1005,9 @@ namespace Euler_WPF
                     "For a 3x3 grid, the grid of nodes is 4x4. Working it out will result in the table below.",
                     TextWrapping = TextWrapping.Wrap
                 });
+                #endregion
 
-                // Table
+                #region Table 3x3
                 Grid g3 = new Grid() { Margin = new Thickness(10, 10, 10, 10)};
                 int s = 3;
                 for (int colI=0; colI <= s; colI++)
@@ -996,7 +1018,15 @@ namespace Euler_WPF
                     for (int rowI=0; rowI <= s; rowI++)
                     {
                         // Text
-                        TextBlock tB = new TextBlock() { Text = $"{pathAmount[colI, rowI]}", Margin = new Thickness(10,10,10,10) };
+                        TextBlock tB;
+                        if (pathAmount[colI, rowI] == 0)
+                        {
+                            tB = new TextBlock() { Text = $"{pathAmount[rowI, colI]}", Margin = new Thickness(10, 10, 10, 10) };
+                        } else
+                        {
+                            tB = new TextBlock() { Text = $"{pathAmount[colI, rowI]}", Margin = new Thickness(10, 10, 10, 10) };
+                        }
+                        
                         Grid.SetRow(tB, rowI);
                         Grid.SetColumn(tB, colI);
                         g3.Children.Add(tB);
@@ -1013,19 +1043,23 @@ namespace Euler_WPF
                 }
                 g3.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                 sDiscSP.Children.Add(g3);
+                #endregion
 
-                // Text
+                #region Solution discription text 2
                 sDiscSP.Children.Add(new TextBlock()
                 {
                     Text = "As can be seen in the table above, the amount of ways to reach the bottom-right node is 20.\n" +
                     "Secondly, there is only 1 way to reach the nodes on the top row and on the left column.\n" +
                     "Thirdly, for every node that is now on the top row or on the left column, the amount of ways to reach it " +
                     "is simply the sum of the ways to reach the nodes that feed into it: it's above- and left-side neighbours.\n" +
+                    "This is also means that each row is the cumulative sum of the row above it.\n" +
+                    "Since the table is symetrical along the x = y axis, only half of the table has to be calculated." +
                     "\nThe table used to determine the ways to traverse a 20x20 lattice is shown below.",
                     TextWrapping = TextWrapping.Wrap
                 });
+                #endregion
 
-                // Table
+                #region Table 20x20
                 Grid g = new Grid() { Margin = new Thickness(10, 10, 10, 10) };
                 s = 20;
                 for (int colI = 0; colI <= s; colI++)
@@ -1058,37 +1092,71 @@ namespace Euler_WPF
                 }
                 g.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
                 sDiscSP.Children.Add(g);
+                #endregion
 
-                // More text
-                sDiscSP.Children.Add(new TextBlock()
-                {
-                    Text = "Further observation yields more patterns: the values on any row (below the first) are the cumulative sum of the row above it." +
-                    "Below is a function...",
-                    TextWrapping = TextWrapping.Wrap
-                });
+                #endregion
 
-
-                // More text
-                sDiscSP.Children.Add(new TextBlock()
-                {
-                    Text = "As can be seen in the table above, this problem can be simplified to solving 20" + "".PadRight(20,'!') + ".\n" +
-                    "A function was created for this purpose.",
-                    TextWrapping = TextWrapping.Wrap
-                });
-
-                // Function (somehow)
-
-
-                // More text
-                sDiscSP.Children.Add(new TextBlock()
-                {
-                    Text = $"FactorialRecurse(20,20) gives: {Enumerable.Range(1,21).Select(item => (long)item).ToArray().CumCumSum(19).Last()}.",
-                    TextWrapping = TextWrapping.Wrap
-                });
-
-                // Return
-                return new Object[] { $"{pathAmount[x,x]}", sDiscSP };
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
             }
+
+            public static Object[] Sol_16()
+            {
+                // What is the sum of the digits of the number 2^1000?
+
+                #region Solution
+
+                int power = 1000;
+                long solution = 0;
+
+                SW.Reset();
+                SW.Start();
+
+                int[] digits = new int[(int)(1 + power * Math.Log10(2))];
+                digits[digits.Length - 1] = 1;
+
+                for (int i = 0; i < power; i++)
+                {
+                    // Multiply each digit by 2
+                    for (int dI = 0; dI < digits.Length; dI++)
+                    {
+                        digits[dI] *= 2;
+                    }
+                    // If any digit is >9 ==> carry over the 1.
+                    for (int dI = digits.Length-1; dI >= 0; dI--)
+                    {
+                        // Assuming <100
+                        if (digits[dI] > 9)
+                        {
+                            digits[dI - 1] += digits[dI]/10;
+                            digits[dI] -= 10;
+                        }
+                    }
+                }
+                solution = digits.Sum();
+
+                SW.Stop();
+
+                #endregion
+
+                #region Solution discription
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "Firstly, the length of the number was calculated: Floor(1 + 1000 * 10log(2)) = 302.\n" +
+                    "Next, an array containing the digits of the number was determined using iterative long multiplication:\n"+ IntArrayToString(digits,"[","","]"),
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                #endregion
+
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
+            }
+
+
 
             public static string[] Sol_31()
             {
@@ -1110,6 +1178,41 @@ namespace Euler_WPF
                     }
                 }
                 return new string[] { $"{waysToMake[200]}" , ""};
+            }
+
+            public static Object[] Sol_TEMPLATE()
+            {
+                #region Solution
+
+                long solution = 0;
+
+                SW.Reset();
+                SW.Start();
+                
+
+                
+                SW.Stop();
+
+                #endregion
+
+                #region Solution discription
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                #region Solution discription text
+
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "",
+                    TextWrapping = TextWrapping.Wrap
+                });
+
+                #endregion
+
+                #endregion
+
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
             }
         }
 
@@ -1476,6 +1579,79 @@ namespace Euler_WPF
             return divisorAm;
         }
 
+        public static string IntArrayToString(int[] x, string lead, string intermediary, string end)
+        {
+            string s = lead;
+            for (int i=0; i<x.Length; i++)
+            {
+                s += $"{x[i]}";
+                if (i != s.Length - 1)
+                {
+                    s += intermediary;
+                }
+            }
+            s += end;
+            return s;
+        }
+
+        public static Grid IntArrayToGrid(int[] x)
+        {
+            Grid g = new Grid() { Margin = new Thickness(10, 10, 10, 10) };
+
+            // 2 rows
+            g.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            g.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+
+            for (int i = 0; i <= x.Length; i++)
+            {
+                g.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+
+                // Text
+                if (i == 0)
+                {
+                    TextBlock tB = new TextBlock() { Text = "Index:", Margin = new Thickness(10, 10, 10, 10) };
+                    Grid.SetRow(tB, 0);
+                    Grid.SetColumn(tB, i);
+                    g.Children.Add(tB);
+
+                    tB = new TextBlock() { Text = $"n:", Margin = new Thickness(10, 10, 10, 10) };
+                    Grid.SetRow(tB, 1);
+                    Grid.SetColumn(tB, i);
+                    g.Children.Add(tB);
+                } else
+                {
+                    TextBlock tB = new TextBlock() { Text = $"{i - 1}", Margin = new Thickness(10, 10, 10, 10) };
+                    Grid.SetRow(tB, 0);
+                    Grid.SetColumn(tB, i);
+                    g.Children.Add(tB);
+
+                    tB = new TextBlock() { Text = $"{x[i - 1]}", Margin = new Thickness(10, 10, 10, 10) };
+                    Grid.SetRow(tB, 1);
+                    Grid.SetColumn(tB, i);
+                    g.Children.Add(tB);
+                }
+
+                
+
+                // Rects
+                Rectangle r = new Rectangle();
+                r.Fill = new SolidColorBrush(Colors.Transparent);
+                r.Stroke = new SolidColorBrush(Colors.Black);
+                Grid.SetRow(r, 0);
+                Grid.SetColumn(r, i);
+                g.Children.Add(r);
+
+                r = new Rectangle();
+                r.Fill = new SolidColorBrush(Colors.Transparent);
+                r.Stroke = new SolidColorBrush(Colors.Black);
+                Grid.SetRow(r, 1);
+                Grid.SetColumn(r, i);
+                g.Children.Add(r);
+            }
+
+            return g;
+        }
+
         #endregion
 
         #region WPF Interaction functions
@@ -1513,14 +1689,12 @@ namespace Euler_WPF
             // If something selected 
             if (ProblemListBox.SelectedItem != null)
             {
-                stopWatch.Start();
+                
                 Object[] solution = Problems.P[Problems.P.Keys.ToList()[ProblemListBox.SelectedIndex]].Solution();
-                stopWatch.Stop();
 
-                CurrentProblemSolutionBlock.Text = solution[0] + $" ({stopWatch.ElapsedMilliseconds}ms)";
-                stopWatch.Reset();
+                CurrentProblemSolutionBlock.Text = solution[0] + $" ({solution[1]}ms)";
 
-                CurProbSP.Children.Add((StackPanel)solution[1]);
+                CurProbSP.Children.Add((StackPanel)solution[2]);
 
                 //CurrentProblemSolutionBlock.Visibility = Visibility.Visible;
                 //CurrentProblemSolutionExpantionSP.Visibility = Visibility.Visible;
