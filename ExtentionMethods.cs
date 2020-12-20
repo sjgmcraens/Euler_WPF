@@ -26,5 +26,14 @@ namespace ExtensionMethods
             return x;
         }
 
+        public static string RemoveAll(this string s, char c)
+        {
+            string r = "";
+            foreach (string i in s.Split(c))
+            {
+                r += i;
+            }
+            return r;
+        }
     }
 }

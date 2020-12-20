@@ -357,6 +357,27 @@ namespace Euler_WPF
                     },
 
                     {
+                        17,
+                        new Problem("Number letter counts",
+                        "If the numbers 1 to 5 are written out in words: one, two, three, four, five, then there are 3 + 3 + 5 + 4 + 4 = 19 letters used in total.\n" +
+                        "If all the numbers from 1 to 1000 (one thousand) inclusive were written out in words, how many letters would be used?\n" +
+                        "NOTE: Do not count spaces or hyphens. For example, 342 (three hundred and forty-two) contains 23 letters and 115 (one hundred and fifteen) contains 20 letters. The use of \"and\" when writing out numbers is in compliance with British usage.",
+                        151178, 5, Sol_17)
+                    },
+
+                    {
+                        18,
+                        new Problem("Maximum path sum I",
+                        "By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.\n" +
+                        "TODO: Add grid\n" +
+                        "That is, 3 + 7 + 4 + 9 = 23.\n" +
+                        "Find the maximum total from top to bottom of the triangle below:\n" +
+                        "TODO: Add grid\n" +
+                        "NOTE: As there are only 16384 routes, it is possible to solve this problem by trying every route. However, Problem 67, is the same challenge with a triangle containing one-hundred rows; it cannot be solved by brute force, and requires a clever method! ;o)",
+                        144606, 5, Sol_18)
+                    },
+
+                    {
                         31,
                         new Problem("Coin sums",
                         "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
@@ -1156,7 +1177,126 @@ namespace Euler_WPF
                 return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
             }
 
+            public static Object[] Sol_17()
+            {
+                // If all the numbers from 1 to 1000 (one thousand) inclusive were written out in words, how many letters would be used?
 
+                #region Solution
+
+                int limit = 1001;
+                int solution = 0;
+
+                SW.Reset();
+                SW.Start();
+
+                for (int i = 1; i < limit; i++)
+                {
+                    solution += IntToVerboseString(i).RemoveAll(' ').RemoveAll('-').Length;
+                }
+
+                SW.Stop();
+
+                #endregion
+
+                #region Solution discription
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                string[,] s = new string[2,limit];
+
+                s[0, 0] = "N";
+                s[1, 0] = "Spelling of N";
+
+                for (int i = 1; i < limit; i++)
+                {
+                    s[0, i] = $"{i}";
+                    s[1, i] = IntToVerboseString(i);
+                }
+
+                sDiscSP.Children.Add(String2DArrayToGrid(s));
+
+                #endregion
+
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
+            }
+
+            public static Object[] Sol_18()
+            {
+                #region Solution
+
+                long solution = 0;
+
+                // I don't value my time
+                int[,] T = new int[,]
+                {
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 75, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 95, 00, 64, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 17, 00, 47, 00, 82, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 18, 00, 35, 00, 87, 00, 10, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 20, 00, 04, 00, 82, 00, 47, 00, 65, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 00, 19, 00, 01, 00, 23, 00, 75, 00, 03, 00, 34, 00, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 00, 88, 00, 02, 00, 77, 00, 73, 00, 07, 00, 63, 00, 67, 00, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 00, 99, 00, 65, 00, 04, 00, 28, 00, 06, 00, 16, 00, 70, 00, 92, 00, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 00, 41, 00, 41, 00, 26, 00, 56, 00, 83, 00, 40, 00, 80, 00, 70, 00, 33, 00, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 00, 41, 00, 48, 00, 72, 00, 33, 00, 47, 00, 32, 00, 37, 00, 16, 00, 94, 00, 29, 00, 00, 00, 00, 00 },
+                    { 00, 00, 00, 00, 53, 00, 71, 00, 44, 00, 65, 00, 25, 00, 43, 00, 91, 00, 52, 00, 97, 00, 51, 00, 14, 00, 00, 00, 00 },
+                    { 00, 00, 00, 70, 00, 11, 00, 33, 00, 28, 00, 77, 00, 73, 00, 17, 00, 78, 00, 39, 00, 68, 00, 17, 00, 57, 00, 00, 00 },
+                    { 00, 00, 91, 00, 71, 00, 52, 00, 38, 00, 17, 00, 14, 00, 91, 00, 43, 00, 58, 00, 50, 00, 27, 00, 29, 00, 48, 00, 00 },
+                    { 00, 63, 00, 66, 00, 04, 00, 68, 00, 89, 00, 53, 00, 67, 00, 30, 00, 73, 00, 16, 00, 69, 00, 87, 00, 40, 00, 31, 00 },
+                    { 04, 00, 62, 00, 98, 00, 27, 00, 23, 00, 09, 00, 70, 00, 98, 00, 73, 00, 93, 00, 38, 00, 53, 00, 60, 00, 04, 00, 23 },
+                };
+
+                SW.Reset();
+                SW.Start();
+
+                // Start at the second row from the bottom and work our way upwards
+                for (int rowI = T.GetLength(0) - 2; rowI >= 0; rowI--)
+                {
+                    // For each number that is not 0
+                    for (int colI = 0; colI < T.GetLength(1); colI++)
+                    {
+                        if (T[rowI, colI] != 0)
+                        {
+                            // Add the highest number below it to itself
+                            T[rowI, colI] += Math.Max(T[rowI + 1, colI - 1], T[rowI + 1, colI + 1]);
+                        }
+                    }
+                }
+                solution = T[T.GetLength(0) / 2 , T.GetLength(1) / 2];
+
+                SW.Stop();
+
+                #endregion
+
+                #region Solution discription
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                string[,] s = new string[T.GetLength(1), T.GetLength(0)];
+
+                for (int i = 0; i < T.GetLength(1); i++)
+                {
+                    for (int j = 0; j<T.GetLength(0); j++)
+                    {
+                        if (T[j, i] == 0)
+                        {
+                            s[i, j] = "";
+                        }
+                        else
+                        {
+                            s[i, j] = $"{T[j, i]}";
+                        }
+                    }
+                }
+
+                sDiscSP.Children.Add(String2DArrayToGrid(s));
+
+                #endregion
+
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
+            }
 
             public static string[] Sol_31()
             {
@@ -1199,15 +1339,11 @@ namespace Euler_WPF
 
                 StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
 
-                #region Solution discription text
-
                 sDiscSP.Children.Add(new TextBlock()
                 {
                     Text = "",
                     TextWrapping = TextWrapping.Wrap
                 });
-
-                #endregion
 
                 #endregion
 
@@ -1650,6 +1786,122 @@ namespace Euler_WPF
             }
 
             return g;
+        }
+
+        public static Grid String2DArrayToGrid(string[,] s)
+        {
+            /// Dim 0 == X == ColI
+            /// Dim 1 == Y == RowI
+            
+            Grid g = new Grid() { Margin = new Thickness(10, 10, 10, 10) };
+
+            for (int i0=0; i0 < s.GetLength(0); i0++)
+            {
+                g.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            }
+            for (int i1 = 0; i1 < s.GetLength(1); i1++)
+            {
+                g.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+
+                for (int i0 = 0; i0 < s.GetLength(0); i0++)
+                {
+                    // Text
+                    TextBlock tB = new TextBlock() { Text = s[i0,i1], Margin = new Thickness(10, 10, 10, 10) };
+                    Grid.SetRow(tB, i1);
+                    Grid.SetColumn(tB, i0);
+                    g.Children.Add(tB);
+
+                    // Outline rect
+                    Rectangle r = new Rectangle()
+                    {
+                        Fill = new SolidColorBrush(Colors.Transparent),
+                        Stroke = new SolidColorBrush(Colors.Black)
+                    };
+                    Grid.SetRow(r, i1);
+                    Grid.SetColumn(r, i0);
+                    g.Children.Add(r);
+                }
+            }
+            return g;
+        }
+
+        static Dictionary<int, string> numbersInWords = new Dictionary<int, string>()
+        {
+            {0,"zero" },
+            {1,"one" },
+            {2,"two" },
+            {3,"three" },
+            {4,"four" },
+            {5,"five" },
+            {6,"six" },
+            {7,"seven" },
+            {8,"eight" },
+            {9,"nine" },
+            {10,"ten" },
+            {11,"eleven" },
+            {12,"twelve" },
+            {13,"thirteen" },
+            {14,"fourteen" },
+            {15,"fifteen" },
+            {16,"sixteen" },
+            {17,"seventeen" },
+            {18,"eighteen" },
+            {19,"nineteen" },
+            {20,"twenty" },
+            {30,"thirty" },
+            {40,"forty" },
+            {50,"fifty" },
+            {60,"sixty" },
+            {70,"seventy" },
+            {80,"eighty" },
+            {90,"ninety" },
+            {100,"one hundred" },
+            {1000,"one thousand" },
+            {1000000,"one million" },
+            {1000000000,"one billion" },
+        };
+        public static string IntToVerboseString(int n)
+        {
+            /// Converts numbers into their spellings.
+            /// Warning: Not guaranteed to work for n > 1000
+
+            // Check to see wether n is included in the dictionary ==> return it if so.
+            if (numbersInWords.ContainsKey(n))
+            {
+                return numbersInWords[n];
+            }
+
+            // p == The largest power of 10 that is <= n
+            int p = (int)Math.Pow(10, n.ToString().Length - 1);
+
+            // a == The first caracter of n
+            int a = n / p;
+
+            // b == The first caracter followed by as many 0's as long as b<n
+            int b = a * p;
+
+            string nStr;
+            if (n < 100)
+            {
+                // Ex: (Ninety) (nine)
+                nStr = IntToVerboseString(b) + "-" + IntToVerboseString(n - b);
+            }
+            else if (n < 1000)
+            {
+                // Ex: (One) (hundred) and (ninety nine)
+                nStr = IntToVerboseString(a) + " " + IntToVerboseString(p).Split(' ')[1];
+                if (n - b != 0)
+                {
+                    nStr += " and " + IntToVerboseString(n - b);
+                }
+            }
+            else
+            {
+                // Ex: (One) (thousand) (one hundred and ninety nine)
+                nStr = IntToVerboseString(a) + " " + IntToVerboseString(p).Split(' ')[1] + " " + IntToVerboseString(n - b);
+            }
+            numbersInWords.Add(n, nStr);
+            return nStr;
         }
 
         #endregion
