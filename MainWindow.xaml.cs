@@ -378,6 +378,14 @@ namespace Euler_WPF
                     },
 
                     {
+                        19,
+                        new Problem("Counting Sundays",
+                        "You are given the following information, but you may prefer to do some research for yourself.\n" +
+                        "How many Sundays fell on the first of the month during the twentieth century (1 Jan 1901 to 31 Dec 2000)?",
+                        134530, 5, Sol_19)
+                    },
+
+                    {
                         31,
                         new Problem("Coin sums",
                         "In the United Kingdom the currency is made up of pound (£) and pence (p). There are eight coins in general circulation:\n" +
@@ -1263,7 +1271,7 @@ namespace Euler_WPF
                         }
                     }
                 }
-                solution = T[T.GetLength(0) / 2 , T.GetLength(1) / 2];
+                solution = T[0 , T.GetLength(1) / 2];
 
                 SW.Stop();
 
@@ -1273,6 +1281,15 @@ namespace Euler_WPF
 
                 StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
 
+                // Explenation
+                sDiscSP.Children.Add(new TextBlock() { 
+                    Text = "A clever way to solve this problem is to solve it from the bottom up. " +
+                           "For every node on the second row from the bottom, we know that the path from there will go to the highest value below it. " +
+                           "This means that the values on that row, taking into account their outcomes, are effectively the sum of themselves and their outcomes. " +
+                           "Keep doing this for every row, and the solution will be the value in the topmost node.",
+                    TextWrapping = TextWrapping.Wrap});
+
+                // Grid to show solution
                 string[,] s = new string[T.GetLength(1), T.GetLength(0)];
 
                 for (int i = 0; i < T.GetLength(1); i++)
@@ -1291,6 +1308,45 @@ namespace Euler_WPF
                 }
 
                 sDiscSP.Children.Add(String2DArrayToGrid(s));
+
+                #endregion
+
+                // Return solution, solutionTime, solutionDiscription
+                return new Object[] { $"{solution}", SW.ElapsedMilliseconds, sDiscSP };
+            }
+
+            public static Object[] Sol_19()
+            {
+                // How many Sundays fell on the first of the month during the twentieth century (1 Jan 1901 to 31 Dec 2000)?
+
+                #region Solution
+
+                long solution = 0;
+
+                SW.Reset();
+                SW.Start();
+
+                for (DateTime date = new DateTime(1901, 1, 1); date.Date <= new DateTime(2000, 12, 31).Date; date = date.AddMonths(1))
+                {
+                    if (date.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        solution++;
+                    }
+                }
+
+                SW.Stop();
+
+                #endregion
+
+                #region Solution discription
+
+                StackPanel sDiscSP = new StackPanel() { Margin = new Thickness(10, 10, 10, 10) };
+
+                sDiscSP.Children.Add(new TextBlock()
+                {
+                    Text = "",
+                    TextWrapping = TextWrapping.Wrap
+                });
 
                 #endregion
 
@@ -1921,6 +1977,9 @@ namespace Euler_WPF
 
         private void SetCurrentProblem(int pIndex)
         {
+            // Remove solution discription
+            RemoveSolutionDiscription();
+
             if (pIndex == -1)
             {
                 CurrentProblemTitleBlock.Text = "Welcome to Project Euler";
@@ -1930,7 +1989,10 @@ namespace Euler_WPF
             {
                 CurrentProblemTitleBlock.Text = Problems.P[pIndex].Title;
                 CurrentProblemDiscriptionBlock.Text = Problems.P[pIndex].Discription;
+                CurrentProblemSolutionBlock.Text = "";
+
                 GetSolutionButton.Visibility = Visibility.Visible;
+                GetSolutionButton.IsEnabled = true;
             }
             //CurrentProblemSolutionBlock.Visibility = Visibility.Hidden;
             //CurrentProblemSolutionExpantionSP.Visibility = Visibility.Hidden;
@@ -1946,10 +2008,18 @@ namespace Euler_WPF
 
                 CurrentProblemSolutionBlock.Text = solution[0] + $" ({solution[1]}ms)";
 
-                CurProbSP.Children.Add((StackPanel)solution[2]);
+                CurProbSP.Children.Add( (StackPanel)solution[2] );
 
-                //CurrentProblemSolutionBlock.Visibility = Visibility.Visible;
-                //CurrentProblemSolutionExpantionSP.Visibility = Visibility.Visible;
+                // Disable solution button
+                GetSolutionButton.IsEnabled = false;
+            }
+        }
+
+        private void RemoveSolutionDiscription()
+        {
+            if (CurProbSP.Children.Count > 3)
+            {
+                CurProbSP.Children.RemoveAt(3);
             }
         }
         #endregion

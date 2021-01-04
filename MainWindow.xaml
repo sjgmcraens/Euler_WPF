@@ -33,7 +33,6 @@
                       Grid.Row="1">
             <StackPanel x:Name="CurProbSP">
                 <TextBlock x:Name="CurrentProblemTitleBlock"
-                   Grid.Row="0"
                    Text="Problem title placeholder"
                    FontSize="30"
                    Margin="10,10,10,10"/>
@@ -48,7 +47,6 @@
 
 
                 <StackPanel x:Name="CurrentProblemSolutionStackPanel"
-                        Grid.Row="2"
                         Orientation="Horizontal">
 
                     <Button x:Name="GetSolutionButton"
@@ -72,6 +70,7 @@
                                Margin="10,10,10,10"
                                TextWrapping="Wrap"/>
                 </StackPanel>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>
