@@ -35,5 +35,21 @@ namespace ExtensionMethods
             }
             return r;
         }
+
+        public static int ToInt(this char c)
+        {
+            return (int)(c - '0');
+        }
+
+        public static string GetBetween(this string s, string sBefore, string sAfter)
+        {
+            if (s.Contains(sBefore) && s.Contains(sAfter))
+            {
+                int sBeforeI = s.IndexOf(sBefore, 0) + sBefore.Length;
+                int sAfterI = s.IndexOf(sAfter, sBeforeI);
+                return s.Substring(sBeforeI, sAfterI - sBeforeI);
+            }
+            return "";
+        }
     }
 }

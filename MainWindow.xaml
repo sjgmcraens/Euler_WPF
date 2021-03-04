@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Euler_WPF"
         mc:Ignorable="d"
-        Title="Euler" Height="600" Width="800" MinWidth="600" MinHeight="200">
+        Title="EulerWPF" Height="600" Width="800" MinWidth="600" MinHeight="200">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10"/>
@@ -18,20 +18,20 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="10"/>
         </Grid.RowDefinitions>
+
         
         
-        <ListBox x:Name="ProblemListBox"
-                 Grid.Column="1"
-                 Height="auto"
-                 Grid.Row="1"
-                 Grid.RowSpan="2"
-                 Width="auto"
-                 SelectionChanged="ProblemListBox_SelectionChanged"/>
+        
 
         <ScrollViewer x:Name="CurrentProblemScrlV"
                       Grid.Column="2"
                       Grid.Row="1">
             <StackPanel x:Name="CurProbSP">
+
+                <Button Name="GoToProblemSelectionButton" Content="GoToProblemSelectionButton" Click="GoToProblemSelectionButton_Click" >
+
+                </Button>
+
                 <TextBlock x:Name="CurrentProblemTitleBlock"
                    Text="Problem title placeholder"
                    FontSize="30"
@@ -51,8 +51,7 @@
 
                     <Button x:Name="GetSolutionButton"
                         Width="100"
-                        Margin="5,5,5,5"
-                        Click="GetSolutionButton_Click">
+                        Margin="5,5,5,5">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Solution"
                                        VerticalAlignment="Center"

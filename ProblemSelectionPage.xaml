@@ -1,0 +1,65 @@
+﻿<Page x:Class="Euler_WPF.ProblemSelectionPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Euler_WPF"
+      mc:Ignorable="d" 
+      d:DesignHeight="600" d:DesignWidth="800"
+      Background="DarkGray">
+
+    <Border BorderBrush="DarkGray"
+            BorderThickness="10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border BorderThickness="2" BorderBrush="Black" Grid.ColumnSpan="1">
+                <ScrollViewer Name="ProblemListScrollViewer"
+                              VerticalScrollBarVisibility="Auto"
+                              FlowDirection="RightToLeft">
+                    <StackPanel PreviewMouseWheel="ProblemListBox_PreviewMouseWheel"
+                                FlowDirection="LeftToRight">
+                        <ListBox x:Name="ProblemListBox"
+                             SelectionChanged="ProblemListBox_SelectionChanged"
+                             MinHeight="300">
+                            <ListBox.Background>
+                                <SolidColorBrush Color="Black" Opacity="0.1"/>
+                            </ListBox.Background>
+                        </ListBox>
+                        <Button x:Name="LoadTenMoreButton" Padding="10" Margin="10"
+                                Click="LoadMoreProblemsButton_Click"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch">
+                            
+                            <Button.Content>
+                                <TextBlock Text="Load 10 more"/>
+                            </Button.Content>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            
+            
+            <Border BorderThickness="2" BorderBrush="Black"
+                    Grid.Column="2"
+                    Name ="ProblemDescriptionBorder">
+                <TextBlock Text="Select a problem to view it's contents."
+                           HorizontalAlignment="Center"
+                           FontSize="25"
+                           TextWrapping="WrapWithOverflow"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Border>
+
+        </Grid>
+    </Border>
+
+</Page>
