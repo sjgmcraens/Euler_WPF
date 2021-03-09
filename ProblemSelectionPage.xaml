@@ -21,29 +21,41 @@
             </Grid.RowDefinitions>
 
             <Border BorderThickness="2" BorderBrush="Black" Grid.ColumnSpan="1">
-                <ScrollViewer Name="ProblemListScrollViewer"
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Name="ProblemListScrollViewer"
                               VerticalScrollBarVisibility="Auto"
                               FlowDirection="RightToLeft">
-                    <StackPanel PreviewMouseWheel="ProblemListBox_PreviewMouseWheel"
+                        <StackPanel PreviewMouseWheel="ProblemListBox_PreviewMouseWheel"
                                 FlowDirection="LeftToRight">
-                        <ListBox x:Name="ProblemListBox"
+                            <ListBox x:Name="ProblemListBox"
                              SelectionChanged="ProblemListBox_SelectionChanged"
-                             MinHeight="300">
-                            <ListBox.Background>
-                                <SolidColorBrush Color="Black" Opacity="0.1"/>
-                            </ListBox.Background>
-                        </ListBox>
-                        <Button x:Name="LoadTenMoreButton" Padding="10" Margin="10"
+                             MinHeight="100">
+                                <ListBox.Background>
+                                    <SolidColorBrush Color="Black" Opacity="0.1"/>
+                                </ListBox.Background>
+                            </ListBox>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Button x:Name="LoadTenMoreButton" Padding="10" Margin="10"
                                 Click="LoadMoreProblemsButton_Click"
                                 HorizontalContentAlignment="Stretch"
-                                VerticalContentAlignment="Stretch">
-                            
-                            <Button.Content>
-                                <TextBlock Text="Load 10 more"/>
-                            </Button.Content>
-                        </Button>
-                    </StackPanel>
-                </ScrollViewer>
+                                VerticalContentAlignment="Stretch"
+                            Grid.Row="1">
+
+                        <Button.Content>
+                            <TextBlock Text="Load 10 more"/>
+                        </Button.Content>
+                    </Button>
+                </Grid>
+                
+
+                
             </Border>
 
             

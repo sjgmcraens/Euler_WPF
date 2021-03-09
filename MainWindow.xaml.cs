@@ -32,6 +32,7 @@ namespace Euler_WPF
 
         string clientVersion = "1.0";
 
+
         public MainWindow()
         {
             InitializeComponent();

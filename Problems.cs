@@ -1,24 +1,14 @@
-﻿using System;
+﻿using ExtensionMethods;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Text.RegularExpressions;
-using Functions;
-using ExtensionMethods;
-using WpfMath;
-using System.Xml;
 using System.Xml.Serialization;
-using System.IO;
+using System.Linq;
+using System.Windows.Media;
 
 namespace Problems
 {
@@ -82,40 +72,153 @@ namespace Problems
                 // Content
                 string pContent = WebData.GetBetween("<div class=\"problem_content\" role=\"problem\">", "</div>");
 
-                //TextBlock tb = new TextBlock();
-                //tb.Inlines.Add("Sample text with ");
-                //tb.Inlines.Add(new Run("bold") { FontWeight = FontWeights.Bold });
-                //tb.Inlines.Add(", ");
-                //tb.Inlines.Add(new Run("italic ") { FontStyle = FontStyles.Italic });
-                //tb.Inlines.Add("and ");
-                //tb.Inlines.Add(new Run("underlined") { TextDecorations = TextDecorations.Underline });
-                //tb.Inlines.Add("words.");
-
-                foreach (string contentLineRaw in pContent.Split('\n'))
+                // Line Escapes
+                string[] lineEscapes = new string[]
                 {
-                    HorizontalAlignment alignment = HorizontalAlignment.Left;
-                    if (contentLineRaw.Contains("<p"))
+                    "<p",
+                    "$$"
+                };
+
+                FlowDocument FD = new FlowDocument()
+                {
+                    Background = new SolidColorBrush(Colors.LightGray),
+                };
+
+                // Format description
+
+                // While pContent contains any lineEscapes
+                while(lineEscapes.Any(x => pContent.Contains(x)))
+                {
+                    // Determine line type
+                    var a = lineEscapes.Select(x => pContent.IndexOf(x)).ToArray();
+                    int eIndex = lineEscapes.Select(x => pContent.IndexOf(x)).Where(x => x != -1).Min();
+                    string e = pContent.Substring(eIndex, 2);
+
+                    string line;
+
+                    // Grab line
+
+                    // "<p" (continue)
+                    if (e == lineEscapes[0]) 
                     {
-                        // Check for arguments inside <p>
-                        if (contentLineRaw.Substring(0,3) != "<p>")
+                        line = pContent.GetBetween(e, "</p>").Trim();
+                        pContent = pContent.Remove(0,pContent.IndexOf("</p>") + "</p>".Length);
+
+                        Paragraph lineP = new Paragraph();
+
+                        // While loop to process class attributes
+                        while (line.Substring(0, "class".Length) == "class")
                         {
-                            if (contentLineRaw.Contains("<p class=\"center\">"))
+                            string c = line.GetBetween("\"", "\"");
+
+                            // Center class
+                            if (c == "center")
                             {
-                                alignment = HorizontalAlignment.Center;
+                                lineP.TextAlignment = TextAlignment.Center;
+                                line = line.Replace("class=\"center\"", "");
+                            }
+
+                            // monospace center
+                            else if (c =="monospace center")
+                            {
+                                lineP.TextAlignment = TextAlignment.Center;
+                                lineP.FontFamily = new FontFamily("Courier New");
+                                lineP.FontSize = 15;
+                                lineP.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                                lineP.LineHeight = lineP.FontSize/2;
+                                line = line.Replace("class=\"monospace center\"", "");
+                            }
+
+                            // Unknown class
+                            else
+                            {
+                                throw new Exception($"Unknown p-class: {c}");
                             }
                         }
-                        string contentLine = contentLineRaw.GetBetween(">", "</p>");
 
-                        Description.Children.Add(new TextBlock()
+                        // <p> case completion (remove '>')
+                        line = line.Remove(0, 1);
+
+                        // Inline escape characters
+                        char[] escapeChars = new char[] { '<', '$' };
+
+                        while (escapeChars.Select(x => line.Contains(x)).Any(x => x))
                         {
-                            Text = contentLine,
-                            FontSize = 18,
-                            HorizontalAlignment = alignment,
-                            TextWrapping = TextWrapping.Wrap,
-                            Margin = new Thickness(0,10,0,0)
-                        }) ;
+                            // Get index of first exception char
+                            int firstECharIndex = escapeChars.Select(eChar => line.IndexOf(eChar)).Where(index => index != -1).Min();
+
+                            // <dfn case (gets removed)
+                            if (line.Substring(firstECharIndex, "<dfn".Length) == "<dfn")
+                            {
+                                string tempContent = line.GetBetween("<dfn", "</dfn>").Trim();
+
+                                if (tempContent.Substring(0, "title".Length) == "title")
+                                {
+                                    // Add the parts and those before it
+                                    lineP.Inlines.Add(new Run(line.Substring(0, firstECharIndex)));
+                                    lineP.Inlines.Add(new Italic(new Run(tempContent.Substring(tempContent.IndexOf(">") + 1))));
+                                    lineP.Inlines.Add(new Run($" ({tempContent.GetBetween("\"", "\"")})"));
+
+                                    // Remove parts from contentLineLeft
+                                    line = line.Remove(0, line.IndexOf("</dfn>") + "</dfn>".Length);
+
+                                    // Continue to next escape part in line
+                                    continue;
+                                }
+                                throw new Exception("<dfn unknown class");
+                            }
+
+                            // "<br"
+                            if (line.Substring(firstECharIndex, "<br".Length) == "<br")
+                            {
+                                line = line.Replace("<br />", "\n");
+                                continue;
+                            }
+
+                            // "$"
+                            if (line[firstECharIndex] == '$')
+                            {
+                                line = line.RemoveAll('$');
+                                continue;
+                            }
+
+                            
+                        }
+
+                        // Add remainder
+                        lineP.Inlines.Add(line);
+
+                        // Line is complete
+                        FD.Blocks.Add(lineP);
+                    }
+                    // "$$" (continue)
+                    else
+                    {
+                        line = pContent.GetBetween(e, e);
+                        pContent = pContent.Remove(0, pContent.IndexOf(e) + e.Length);
+                        pContent = pContent.Remove(0, pContent.IndexOf(e) + e.Length);
+
+                        // Create block with formula
+                        BlockUIContainer lineBlock = new BlockUIContainer()
+                        {
+                            Child = new WpfMath.Controls.FormulaControl()
+                            {
+                                Formula = line
+                            }
+                        };
+
+                        // Add to FD
+                        FD.Blocks.Add(lineBlock);
+
+                        // Goto next line
+                        continue;
                     }
                 }
+
+                Description.Children.Add(new FlowDocumentScrollViewer()
+                {
+                    Document = FD
+                }) ;
 
             }
             return Description;
