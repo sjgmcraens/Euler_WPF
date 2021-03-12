@@ -28,47 +28,63 @@
                       Grid.Row="1">
             <StackPanel x:Name="CurProbSP">
 
-                <Button Name="GoToProblemSelectionButton" Content="GoToProblemSelectionButton" Click="GoToProblemSelectionButton_Click" >
-
-                </Button>
-
-                <TextBlock x:Name="CurrentProblemTitleBlock"
-                   Text="Problem title placeholder"
+                <TextBlock x:Name="HelloUser_TextBlock"
+                   Text="Welcome, [username]"
                    FontSize="30"
                    Margin="10,10,10,10"/>
 
-
-                <TextBlock x:Name="CurrentProblemDiscriptionBlock"
-                   
-                   Text="Problem discription placeholder"
-                   FontSize="10"
-                   Margin="10,10,10,10"
-                   TextWrapping="Wrap"/>
-
-
-                <StackPanel x:Name="CurrentProblemSolutionStackPanel"
-                        Orientation="Horizontal">
-
-                    <Button x:Name="GetSolutionButton"
-                        Width="100"
-                        Margin="5,5,5,5">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Solution"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,5,0"/>
-                            <Polygon Points="0,0 10,8, 0,16" 
-                                     Stroke="Black" 
-                                     Fill="Black" />
-                        </StackPanel>
-                    </Button>
-
-                    <TextBlock x:Name="CurrentProblemSolutionBlock"
+                <TextBlock x:Name="AppTitle_TextBlock"
                                Grid.Row="2"
-                               Text="Problem solution placeholder"
+                               Text="To EulerWPF by Sebastiaan Craens"
                                FontSize="20"
-                               Margin="10,10,10,10"
+                               Margin="10,10,10,0"
                                TextWrapping="Wrap"/>
-                </StackPanel>
+
+                <TextBlock x:Name="ClientVersion_TextBlock"
+                   
+                   Text="Version: [version]"
+                   FontSize="10"
+                   Margin="10,0,10,10"/>
+                
+                
+                
+
+                <Button Name="GoToProblemSelectionButton" 
+                        Content="Problems" 
+                        Click="GoToProblemSelectionButton_Click"
+                        HorizontalAlignment="Left"
+                        Margin="10,50,10,5"
+                        Padding="0,5,0,5"
+                        Width="100">
+                </Button>
+
+                <Button Name="About_Button"
+                        Content="About" 
+                        Click="GoToProblemSelectionButton_Click"
+                        HorizontalAlignment="Left"
+                        Margin="10,5,10,5"
+                        Padding="0,5,0,5"
+                        Width="100">
+                </Button>
+
+                <Button Name="Changelog_Button"
+                        Content="Changelog" 
+                        Click="GoToProblemSelectionButton_Click"
+                        HorizontalAlignment="Left"
+                        Margin="10,5,10,5"
+                        Padding="0,5,0,5"
+                        Width="100">
+                </Button>
+
+                <Button Name="Settings_Button"
+                        Content="Settings" 
+                        Click="Settings_Button_Click"
+                        HorizontalAlignment="Left"
+                        Margin="10,5,10,5"
+                        Padding="0,5,0,5"
+                        Width="100">
+                </Button>
+
 
             </StackPanel>
         </ScrollViewer>

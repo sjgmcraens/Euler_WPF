@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Xml.Serialization;
 using System.Linq;
 using System.Windows.Media;
+using Euler_WPF;
 
 namespace Problems
 {
@@ -136,14 +137,12 @@ namespace Problems
                     // Format line
                     (string s, string e) e = firstEscape.Item1;
 
+                    var lineP = new Paragraph();
+                    lineP.Margin = new Thickness(10);
+
                     // "<p" or "<div"
                     if (e == lineEscapes[0] || e == lineEscapes[2])
                     {
-                        BlockUIContainer lineBlock = new BlockUIContainer();
-                        Paragraph lineP = new Paragraph();
-                        FlowDocument tempFD = new FlowDocument();
-
-                        tempFD.Blocks.Add(lineP);
 
                         // If line contains class
                         while (line.Contains(e.s + " class"))
@@ -170,7 +169,7 @@ namespace Problems
                                         lineP.LineHeight = lineP.FontSize / 2;
                                         lineP.BorderBrush = new SolidColorBrush(Colors.Black);
                                         lineP.BorderThickness = new Thickness(1);
-                                        lineP.Padding = new Thickness(0, 5, 0, 0);
+                                        lineP.Padding = new Thickness(5, 5, 5, 0);
                                         // Need some way to make the paragraph shrink to its contents
                                     }
                                     break;
@@ -185,10 +184,10 @@ namespace Problems
                         line = line.GetBetween(e.s + ">",e.e);
 
 
-                        // Inline escape characters
+                        // Grab complex inline escape codes
                         (string s, string e)[] eCodes = ProblemData.complexInlineEscapeCodes;
 
-                        // While line contains escape codes
+                        // Processing complex inline escape codes
                         while (eCodes.Select(x => line.Contains(x.s)).Any(x => x))
                         {
                             // Get index of first code
@@ -214,7 +213,7 @@ namespace Problems
                                         string pTitle = line.GetBetweenInclusive(" title=\"", "\"");
 
                                         // Add the parts and those before it
-                                        
+
                                         lineP.Inlines.Add(new Run(beforePartFormatted));
                                         lineP.Inlines.Add(new Italic(new Run(fullTag.GetBetween(">","<"))));
                                         lineP.Inlines.Add(new Run($" ({pTitle.GetBetween("\"", "\"")})"));
@@ -289,49 +288,44 @@ namespace Problems
                             }
                         }
 
+                        // Processing replacable inline escape codes
                         line = ReplaceInlineEscapeCodes(line);
 
-                        // Add remainder
+                        // Add remainder to the paragraph
                         lineP.Inlines.Add(line);
-
-                        // Line is complete
-                        FD.Blocks.Add(lineP);
                     }
 
                     // "$$" (continue)
                     else if (e == lineEscapes[1])
                     {
+                        // Get raw line
                         line = pContent.GetBetween(e.s, e.e);
-                        pContent = pContent.Remove(0, pContent.IndexOf(e.s) + e.s.Length);
-                        pContent = pContent.Remove(0, pContent.IndexOf(e.e) + e.e.Length);
+                        // Remove up to and including the second "$$"
+                        pContent = pContent.Remove(0, pContent.IndexOf(e.s) + e.s.Length).Remove(0, pContent.IndexOf(e.e) + e.e.Length);
 
-                        // Create block with formula
-                        BlockUIContainer lineBlock = new BlockUIContainer()
+                        // Set formula as child
+                        lineP.Inlines.Add(new InlineUIContainer()
                         {
                             Child = new WpfMath.Controls.FormulaControl()
                             {
                                 Formula = line
                             }
-                        };
-
-                        // Add to FD
-                        FD.Blocks.Add(lineBlock);
-
-                        // Goto next line
-                        continue;
+                        });
                     }
 
-                    // Unknown line escape code
-                    else
-                    {
-                        throw new NotImplementedException("WTF");
-                    }
+                    // Add line block
+                    FD.Blocks.Add(lineP);
                 }
+
+                FD.IsHyphenationEnabled = true;
+                FD.IsOptimalParagraphEnabled = true;
+                //FD.MaxPageHeight = ProblemSelectionPage
 
                 // Add FD to description 
                 Description.Children.Add(new FlowDocumentScrollViewer()
                 {
-                    Document = FD
+                    Document = FD,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
                 });
 
             }

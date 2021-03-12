@@ -22,7 +22,6 @@ namespace Euler_WPF
     /// </summary>
     public partial class ProblemSelectionPage : Page
     {
-
         BackgroundWorker ProblemLoadingWorker;
 
         public ProblemSelectionPage()

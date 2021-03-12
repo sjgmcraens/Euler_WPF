@@ -14,7 +14,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="159*"/>
+                <ColumnDefinition Width="502*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -42,7 +43,7 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Button x:Name="LoadTenMoreButton" Padding="10" Margin="10"
+                    <Button x:Name="LoadTenMoreButton" Padding="10" Margin="5"
                                 Click="LoadMoreProblemsButton_Click"
                                 HorizontalContentAlignment="Stretch"
                                 VerticalContentAlignment="Stretch"
@@ -53,23 +54,57 @@
                         </Button.Content>
                     </Button>
                 </Grid>
-                
 
-                
+
+
             </Border>
 
-            
-            
-            <Border BorderThickness="2" BorderBrush="Black"
-                    Grid.Column="2"
+
+
+
+            <Grid Grid.Column="2" Grid.ColumnSpan="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <Border BorderThickness="2" BorderBrush="Black"
+                    Grid.Row="0"
                     Name ="ProblemDescriptionBorder">
-                <TextBlock Text="Select a problem to view it's contents."
+                    <TextBlock Text="Select a problem to view it's contents."
                            HorizontalAlignment="Center"
                            FontSize="25"
                            TextWrapping="WrapWithOverflow"
                            TextAlignment="Center"
                            VerticalAlignment="Center"/>
-            </Border>
+                </Border>
+
+                <Border BorderThickness="2" BorderBrush="Black"
+                        Grid.Row="2">
+
+                    <Button x:Name="GetSolutionButton"
+                        Width="100"
+                        Height="30"
+                        Margin="5"
+                    
+                        HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Solution"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,5,0"/>
+                            <Polygon Points="0,0 10,8, 0,16" 
+                                     Stroke="Black" 
+                                     Fill="Black" />
+                        </StackPanel>
+                    </Button>
+
+                </Border>
+
+            </Grid>
+
+
+
 
         </Grid>
     </Border>

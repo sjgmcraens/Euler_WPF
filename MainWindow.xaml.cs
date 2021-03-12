@@ -27,11 +27,11 @@ namespace Euler_WPF
     {
 
         Page ProblemSelectionPage = new ProblemSelectionPage();
+        Page SettingsPage = new SettingsPage();
 
         UserProfile currentUserProfile;
 
         string clientVersion = "1.0";
-
 
         public MainWindow()
         {
@@ -55,6 +55,25 @@ namespace Euler_WPF
                 currentUserProfile = new UserProfile("DefaultUser", clientVersion);
                 currentUserProfile.SaveUserData();
             }
+
+            // Greet the user
+            HelloUser_TextBlock.Text = HelloUser_TextBlock.Text.Replace("[username]", currentUserProfile.userName);
+
+            // Display the client version
+            ClientVersion_TextBlock.Text = ClientVersion_TextBlock.Text.Replace("[version]", clientVersion);
+        }
+
+
+        // Go to problems page button click
+        private void GoToProblemSelectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Content = ProblemSelectionPage;
+        }
+
+        // Settings button click
+        private void Settings_Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Content = SettingsPage;
         }
 
         #region Misc WPF functions
@@ -213,10 +232,7 @@ namespace Euler_WPF
         //}
         //#endregion
 
-        private void GoToProblemSelectionButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Content = ProblemSelectionPage;
-        }
+        
     }
 }
 
