@@ -47,21 +47,23 @@ namespace Problems
             difficulty = Convert.ToInt32(miscInfo.GetBetween("Difficulty rating: ", "%"));
         }
 
-        public StackPanel GetDescription() 
+        public StackPanel GetDescriptionSP() 
         {
             if (Description is null)
             {
-                // Generate description
+                // Generate parent StackPanel
                 Description = new StackPanel()
                 {
                     Margin = new Thickness(5)
                 };
+
                 // Title
                 Description.Children.Add(new TextBlock()
                 {
                     Text = Title,
                     FontSize = 30,
                 });
+
                 // Subtext
                 Description.Children.Add(new TextBlock()
                 {
@@ -69,121 +71,225 @@ namespace Problems
                     FontSize = 10,
                     Margin = new Thickness(0,0,0,10)
                 });
-                // Content
-                string pContent = WebData.GetBetween("<div class=\"problem_content\" role=\"problem\">", "</div>");
 
-                // Line Escapes
-                string[] lineEscapes = new string[]
+                // Get content
+                string openingTag = "<div class=\"problem_content\" role=\"problem\">";
+                int indexOfFirstDiv = WebData.IndexOf(openingTag);
+                // WebData = WebData.Substring(indexOfFirstDiv);
+                int indexOfFirstDivClosingTag;
+                int depth = 0;
+                int curIndex = indexOfFirstDiv;
+                string curCode = "<div";
+                while (true)
                 {
-                    "<p",
-                    "$$"
-                };
+                    // Find next code
+                    var firstCodeIndices = new string[] { "<div", "</div" }.Select(code => (code, WebData.IndexOf(code, curIndex + curCode.Length))).Where(x => x.Item2 != -1);
+                    var firstCode = firstCodeIndices.Where(x => x.Item2 == firstCodeIndices.Min(y => y.Item2)).First();
+                    curIndex = firstCode.Item2;
+                    curCode = firstCode.code;
 
+                    if (firstCode.code == "<div")
+                    {
+                        depth++;
+                    }
+                    else
+                    {
+                        if (depth > 0)
+                        {
+                            depth--;
+                        }
+                        else
+                        {
+                            // Done
+                            indexOfFirstDivClosingTag = firstCode.Item2;
+                            break;
+                        }
+                    }
+                }
+
+                string pContent = WebData.Substring(indexOfFirstDiv + openingTag.Length, indexOfFirstDivClosingTag - indexOfFirstDiv - openingTag.Length);
+
+                // Flowdoc to hold content
                 FlowDocument FD = new FlowDocument()
                 {
                     Background = new SolidColorBrush(Colors.LightGray),
                 };
 
-                // Format description
+                // Import lineEscapes
+                (string start, string end)[] lineEscapes = ProblemData.lineEscapes;
 
-                // While pContent contains any lineEscapes
-                while(lineEscapes.Any(x => pContent.Contains(x)))
+                // Formatting description below
+
+                // Get lines from pContent
+                while (lineEscapes.Any(x => pContent.Contains(x.start)))
                 {
-                    // Determine line type
-                    var a = lineEscapes.Select(x => pContent.IndexOf(x)).ToArray();
-                    int eIndex = lineEscapes.Select(x => pContent.IndexOf(x)).Where(x => x != -1).Min();
-                    string e = pContent.Substring(eIndex, 2);
+                    // Get escape (where x.start index == lowest index)
+                    ((string, string), int)[] lineEscapeIndices = lineEscapes.Select(x => (x, pContent.IndexOf(x.start))).Where(x => x.Item2 != -1).ToArray();
+                    var firstEscape = lineEscapeIndices.First(x => x.Item2 == lineEscapeIndices.Min(y => y.Item2));
 
-                    string line;
+                    // Get line
+                    string line = pContent.GetBetweenInclusive(firstEscape.Item1.Item1, firstEscape.Item1.Item2);
 
-                    // Grab line
+                    // Remove line
+                    pContent = pContent.Replace(line, "");
 
-                    // "<p" (continue)
-                    if (e == lineEscapes[0]) 
+                    // Format line
+                    (string s, string e) e = firstEscape.Item1;
+
+                    // "<p" or "<div"
+                    if (e == lineEscapes[0] || e == lineEscapes[2])
                     {
-                        line = pContent.GetBetween(e, "</p>").Trim();
-                        pContent = pContent.Remove(0,pContent.IndexOf("</p>") + "</p>".Length);
-
+                        BlockUIContainer lineBlock = new BlockUIContainer();
                         Paragraph lineP = new Paragraph();
+                        FlowDocument tempFD = new FlowDocument();
 
-                        // While loop to process class attributes
-                        while (line.Substring(0, "class".Length) == "class")
+                        tempFD.Blocks.Add(lineP);
+
+                        // If line contains class
+                        while (line.Contains(e.s + " class"))
                         {
-                            string c = line.GetBetween("\"", "\"");
-
-                            // Center class
-                            if (c == "center")
+                            // Get class
+                            string pClass = line.GetBetween(" class=\"", "\"");
+                            // Remove class from line
+                            line = line.Replace(" class=\"" + pClass + "\"", "");
+                            // apply class
+                            switch (pClass)
                             {
-                                lineP.TextAlignment = TextAlignment.Center;
-                                line = line.Replace("class=\"center\"", "");
-                            }
+                                // Horizontally centered
+                                case "center":
+                                    lineP.TextAlignment = TextAlignment.Center;
+                                    break;
 
-                            // monospace center
-                            else if (c =="monospace center")
-                            {
-                                lineP.TextAlignment = TextAlignment.Center;
-                                lineP.FontFamily = new FontFamily("Courier New");
-                                lineP.FontSize = 15;
-                                lineP.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-                                lineP.LineHeight = lineP.FontSize/2;
-                                line = line.Replace("class=\"monospace center\"", "");
-                            }
+                                // Monospace + Horizontally centered
+                                case "monospace center":
+                                    {
+                                        lineP.TextAlignment = TextAlignment.Center;
+                                        lineP.FontFamily = new FontFamily("Courier New");
+                                        lineP.FontSize = 15;
+                                        lineP.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                                        lineP.LineHeight = lineP.FontSize / 2;
+                                        lineP.BorderBrush = new SolidColorBrush(Colors.Black);
+                                        lineP.BorderThickness = new Thickness(1);
+                                        lineP.Padding = new Thickness(0, 5, 0, 0);
+                                        // Need some way to make the paragraph shrink to its contents
+                                    }
+                                    break;
 
-                            // Unknown class
-                            else
-                            {
-                                throw new Exception($"Unknown p-class: {c}");
+                                // Unknown error
+                                default:
+                                    throw new Exception($"Unknown pClass ({pClass})");
                             }
                         }
 
                         // <p> case completion (remove '>')
-                        line = line.Remove(0, 1);
+                        line = line.GetBetween(e.s + ">",e.e);
+
 
                         // Inline escape characters
-                        char[] escapeChars = new char[] { '<', '$' };
+                        (string s, string e)[] eCodes = ProblemData.complexInlineEscapeCodes;
 
-                        while (escapeChars.Select(x => line.Contains(x)).Any(x => x))
+                        // While line contains escape codes
+                        while (eCodes.Select(x => line.Contains(x.s)).Any(x => x))
                         {
-                            // Get index of first exception char
-                            int firstECharIndex = escapeChars.Select(eChar => line.IndexOf(eChar)).Where(index => index != -1).Min();
+                            // Get index of first code
+                            (int index, (string s, string e) code)[] eCharIndexes = eCodes.Select(x => (line.IndexOf(x.s), x)).Where(i => i.Item1 != -1).ToArray();
+                            var firstEChar = eCharIndexes.Where(x => x.index == eCharIndexes.Min(y => y.index)).First();
 
-                            // <dfn case (gets removed)
-                            if (line.Substring(firstECharIndex, "<dfn".Length) == "<dfn")
+                            // Isolate code
+                            var code = firstEChar.code;
+                            // Get complete tag
+                            string fullTag = line.GetBetweenInclusive(code.s, code.e);
+                            // Get before part
+                            string beforePart = line.Substring(0, firstEChar.index);
+                            string beforePartFormatted = ReplaceInlineEscapeCodes(beforePart);
+
+                            switch (firstEChar.code.s)
                             {
-                                string tempContent = line.GetBetween("<dfn", "</dfn>").Trim();
+                                case "<dfn": // Inline italic with tooltip
 
-                                if (tempContent.Substring(0, "title".Length) == "title")
-                                {
-                                    // Add the parts and those before it
-                                    lineP.Inlines.Add(new Run(line.Substring(0, firstECharIndex)));
-                                    lineP.Inlines.Add(new Italic(new Run(tempContent.Substring(tempContent.IndexOf(">") + 1))));
-                                    lineP.Inlines.Add(new Run($" ({tempContent.GetBetween("\"", "\"")})"));
+                                    // If tag contains "<dfn title"
+                                    if (fullTag.Contains(code.s + " title"))
+                                    {
+                                        // Get title
+                                        string pTitle = line.GetBetweenInclusive(" title=\"", "\"");
+
+                                        // Add the parts and those before it
+                                        
+                                        lineP.Inlines.Add(new Run(beforePartFormatted));
+                                        lineP.Inlines.Add(new Italic(new Run(fullTag.GetBetween(">","<"))));
+                                        lineP.Inlines.Add(new Run($" ({pTitle.GetBetween("\"", "\"")})"));
+
+                                        // Remove parts from contentLineLeft
+                                        line = line.Replace(beforePart + fullTag, "");
+
+                                        // Continue to next escape part in line
+                                        continue;
+                                    }
+
+                                    throw new Exception("Not implemented dfn");
+
+                                case "<sup": // Superscript
+
+                                    // Isolate content and apply superscript
+                                    string tagContent = fullTag.GetBetween(">", "<");
+
+                                    switch (tagContent)
+                                    {
+                                        case "2":
+                                            tagContent = "\xB2";    
+                                        break;
+                                        case "th":
+                                            //tagContent = "th";
+                                            break;
+                                        default:
+                                            throw new Exception($"Unknown <sup tag content; {tagContent}");
+                                    }
+
+                                    // Add parts 
+                                    lineP.Inlines.Add(new Run(beforePartFormatted));
+                                    lineP.Inlines.Add(new Run(tagContent));
 
                                     // Remove parts from contentLineLeft
-                                    line = line.Remove(0, line.IndexOf("</dfn>") + "</dfn>".Length);
+                                    line = line.Replace(beforePart + fullTag, "");
 
                                     // Continue to next escape part in line
                                     continue;
-                                }
-                                throw new Exception("<dfn unknown class");
-                            }
 
-                            // "<br"
-                            if (line.Substring(firstECharIndex, "<br".Length) == "<br")
-                            {
-                                line = line.Replace("<br />", "\n");
-                                continue;
-                            }
+                                case "<span":
 
-                            // "$"
-                            if (line[firstECharIndex] == '$')
-                            {
-                                line = line.RemoveAll('$');
-                                continue;
-                            }
+                                    // If tag contains "<dfn title"
+                                    if (fullTag.Contains(code.s + " class"))
+                                    {
+                                        // Get class (color)
+                                        string spanClass = line.GetBetweenInclusive(" class=\"", "\"");
 
-                            
+                                        // Add the parts and those before it
+                                        if (spanClass.GetBetween("\"", "\"") == "red")
+                                        {
+                                            lineP.Inlines.Add(new Run(beforePartFormatted));
+                                            lineP.Inlines.Add(new Run(ReplaceInlineEscapeCodes(fullTag.GetBetween(code.s + spanClass + ">", code.e)))
+                                            {
+                                                Foreground = new SolidColorBrush(Colors.Red)
+                                            });
+
+                                            // Remove parts from contentLineLeft
+                                            line = line.Replace(beforePart + fullTag, "");
+
+                                            // Continue to next escape part in line
+                                            continue;
+                                        }
+
+                                        throw new Exception("Not implemented span color");
+                                    }
+
+                                    throw new Exception("Not implemented span class");
+
+                                default:
+                                    throw new Exception($"Unknown inline escape code ({code.s},{code.e} at {firstEChar.index})");
+                            }
                         }
+
+                        line = ReplaceInlineEscapeCodes(line);
 
                         // Add remainder
                         lineP.Inlines.Add(line);
@@ -191,12 +297,13 @@ namespace Problems
                         // Line is complete
                         FD.Blocks.Add(lineP);
                     }
+
                     // "$$" (continue)
-                    else
+                    else if (e == lineEscapes[1])
                     {
-                        line = pContent.GetBetween(e, e);
-                        pContent = pContent.Remove(0, pContent.IndexOf(e) + e.Length);
-                        pContent = pContent.Remove(0, pContent.IndexOf(e) + e.Length);
+                        line = pContent.GetBetween(e.s, e.e);
+                        pContent = pContent.Remove(0, pContent.IndexOf(e.s) + e.s.Length);
+                        pContent = pContent.Remove(0, pContent.IndexOf(e.e) + e.e.Length);
 
                         // Create block with formula
                         BlockUIContainer lineBlock = new BlockUIContainer()
@@ -213,15 +320,31 @@ namespace Problems
                         // Goto next line
                         continue;
                     }
+
+                    // Unknown line escape code
+                    else
+                    {
+                        throw new NotImplementedException("WTF");
+                    }
                 }
 
+                // Add FD to description 
                 Description.Children.Add(new FlowDocumentScrollViewer()
                 {
                     Document = FD
-                }) ;
+                });
 
             }
             return Description;
+        }
+    private static string ReplaceInlineEscapeCodes(string str)
+        {
+            // Replace simple escape codes
+            foreach (var c in ProblemData.replaceInlineEscapeCodes)
+            {
+                str = str.Replace(c.code, c.r);
+            }
+            return str;
         }
     }
 
@@ -236,6 +359,34 @@ namespace Problems
         private static System.Net.WebClient webClient;
 
         private static string archivesWebData;
+
+        // Line Escapes
+        public static (string start, string end)[] lineEscapes = new (string start, string end)[]
+        {
+            ("<p", "</p>"),
+            ("$$", "$$"),
+            ("<div","</div>")
+        };
+
+        // Inline escape codes
+        public static (string s, string e)[] complexInlineEscapeCodes = new (string code, string r)[]
+        {
+            ("<dfn", "</dfn>"),
+            ("<sup","</sup>"),
+            ("<span", "</span>")
+        };
+
+        // Simple inlione escape codes
+        public static (string code, string r)[] replaceInlineEscapeCodes = new (string code, string r)[]
+        {
+            ("<br />", "\n"),
+            ("&lt;"  , "<"),
+            ("<$ />" , ""),
+            ("<var>" , ""),
+            ("</var>", ""),
+            ("<b>"   , ""),
+            ("</b>"  , "")
+        };
 
         static ProblemData()
         {

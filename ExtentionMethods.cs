@@ -51,5 +51,29 @@ namespace ExtensionMethods
             }
             return "";
         }
+
+        public static string GetBetweenInclusive(this string str, string start, string end)
+        {
+            // Contains exception
+            if (!str.Contains(start) || !str.Contains(end))
+            {
+                throw new Exception("GetBetweenInclusive() start or end missing exception.");
+            }
+
+            // Get start + end indexes
+            int startI = str.IndexOf(start, 0);
+            int endI = str.IndexOf(end, startI+start.Length);
+
+            // End before start exception
+            if (endI == -1)
+            {
+                throw new Exception("GetBetweenInclusive() end before start exception.");
+            }
+
+            string r = str.Substring(startI, endI - startI + end.Length);
+
+            // Return
+            return r;
+        }
     }
 }

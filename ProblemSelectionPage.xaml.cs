@@ -52,7 +52,7 @@ namespace Euler_WPF
         // Handles selection from the PLB
         private void ProblemListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ProblemDescriptionBorder.Child = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescription();
+            ProblemDescriptionBorder.Child = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescriptionSP();
         }
 
 
