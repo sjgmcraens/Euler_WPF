@@ -20,10 +20,16 @@ namespace Euler_WPF
     /// <summary>
     /// Interaction logic for Page1.xaml
     /// </summary>
+
+    /// 
+
     public partial class ProblemSelectionPage : Page
     {
+        // Global variables
         BackgroundWorker ProblemLoadingWorker;
+        FlowDocumentScrollViewer currentProblemDFSV;
 
+        // Constructor
         public ProblemSelectionPage()
         {
             InitializeComponent();
@@ -37,30 +43,38 @@ namespace Euler_WPF
             ProblemLoadingWorker.RunWorkerCompleted += ProblemLoadingWorker_RunWorkerCompleted;
             ProblemLoadingWorker.ProgressChanged += ProblemLoadingWorker_ProgressChanged;
 
-            ProblemData.LoadAtLeast(10);
+            ProblemData.LoadAtLeast(20);
             ProblemListBox_LoadAll();
         }
 
         
-
-
-
         #region Problem ListBox
-
 
         // Handles selection from the PLB
         private void ProblemListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ProblemDescriptionBorder.Child = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescriptionSP();
-        }
+            // Delete SelectInitialProblem
+            if (Grid_Main.Children.Contains(SelectInitialProblem_TextBlock))
+            {
+                Grid_Main.Children.Remove(SelectInitialProblem_TextBlock);
+            }
 
+            // Delete previous
+            if ( !(currentProblemDFSV is null))
+            {
+                Grid_Main.Children.Remove(currentProblemDFSV);
+            }
+
+            currentProblemDFSV = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescriptionFDSV();
+            Grid.SetColumn(currentProblemDFSV, 1);
+            Grid_Main.Children.Add(currentProblemDFSV);
+        }
 
         // Handles scolling when the mouse is inside of the listbox
         private void ProblemListBox_PreviewMouseWheel(Object sender, MouseWheelEventArgs e)
         {
             ProblemListScrollViewer.ScrollToVerticalOffset(ProblemListScrollViewer.VerticalOffset - e.Delta / 3);
         }
-
 
         #region Problem loading
 
