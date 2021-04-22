@@ -10,7 +10,6 @@ using System.Xml.Serialization;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Euler_WPF.HtmlConverter;
 
 
 namespace Problems
@@ -54,7 +53,7 @@ namespace Problems
         }
 
         // Get FlowDoc of description
-        public FlowDocumentScrollViewer GetDescriptionFDSV()
+        public FlowDocumentScrollViewer GetDescriptionFDSV(int pNum)
         {
             if (Description is null)
             {
@@ -69,16 +68,33 @@ namespace Problems
                 };
 
                 // Title
+                TextBlock TitleTB = new TextBlock()
+                {
+                    FontSize = 30,
+                    FontFamily = new FontFamily("Georgia"),
+                };
+
+                // Get link
+                string linkPath = "https://projecteuler.net/problem=" + pNum;
+
+                // Add hyperlink
+                var HL = new Hyperlink(new Run($"{pNum}: " + Title))
+                {
+                    Foreground = new SolidColorBrush(Colors.Black),
+                    TextDecorations = null,
+                    NavigateUri = new Uri(linkPath)
+                };
+                HL.RequestNavigate += (sender, e) =>
+                {
+                    System.Diagnostics.Process.Start(e.Uri.ToString());
+                };
+                TitleTB.Inlines.Add(HL);
+
                 FD.Blocks.Add(new BlockUIContainer()
                 {
-                    Child = new TextBlock()
-                    {
-                        Text = Title,
-                        FontSize = 30,
-                        FontFamily = new FontFamily("Georgia")
-                    },
+                    Child = TitleTB,
                     BorderBrush = new SolidColorBrush(Colors.Black),
-                    BorderThickness = new Thickness(0,0,0,1)
+                    BorderThickness = new Thickness(0,0,0,1),
                 });
 
                 // Subtext
@@ -137,14 +153,14 @@ namespace Problems
 
                 #endregion
 
-                #region Format Lines
-
-                RichTextBox R = new RichTextBox();
-
-                HtmlToXamlConverter.ConvertHtmlToXaml(text, true)
-
-
-                #endregion
+                // Format Lines
+                Block B;
+                (pContent, B) = HTML.FormatFirstBlock(pContent);
+                while (pContent.Length > 0)
+                {
+                    FD.Blocks.Add(B);
+                    (pContent, B) = HTML.FormatFirstBlock(pContent);
+                }
 
                 #endregion
 
@@ -164,7 +180,7 @@ namespace Problems
     public static class HTML
     {
         // Paragraph tags
-        public static readonly (string start, string end)[] paragraphTags = new (string start, string end)[]
+        public static readonly (string start, string end)[] blockTags = new (string start, string end)[]
         {
             ("<p", "</p>"),
             ("$$", "$$"),
@@ -180,28 +196,13 @@ namespace Problems
             '$'
         };
 
-        // Superscript dict (might still need this someday)
-        //public static readonly Dictionary<char, char> SuperscriptChars = new Dictionary<char, char>()
-        //{
-        //    { '0', '\x2070' },
-        //    { '1', '\x00B9' },
-        //    { '2', '\x00B2' },
-        //    { '3', '\x00B3' },
-        //    { '4', '\x2074' },
-        //    { '5', '\x2075' },
-        //    { '6', '\x2076' },
-        //    { '7', '\x2077' },
-        //    { '8', '\x2078' },
-        //    { '9', '\x2079' },
-        //};
-
         // Replace exit codes that can be replaced at the start of the parsing
         public static string PreparationReplace(string str)
         {
             new (string c, string r)[]
             {
                 ("\n", ""),
-                ("(right click and 'Save Link/Target As...') ", "")
+                (" (right click and 'Save Link/Target As...')", "")
             }
             .ToList().ForEach(x => str = str.Replace(x.c, x.r));
 
@@ -210,16 +211,15 @@ namespace Problems
 
         // Create formula control from string
         public static InlineUIContainer GetFormulaControl(string str)
-        {
-            var F = new WpfMath.Controls.FormulaControl()
-            {
-                Formula = str,
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(5,0,5,0)
-            };
+        { 
             var C = new InlineUIContainer()
             {
-                Child = F,
+                Child = new WpfMath.Controls.FormulaControl()
+                {
+                    Formula = str,
+                    FontWeight = FontWeights.Bold,
+                    Margin = new Thickness(5, 0, 5, 0)
+                },
                 BaselineAlignment = BaselineAlignment.Bottom,
             };
 
@@ -233,186 +233,184 @@ namespace Problems
             return new Run(str.Replace(code.c, code.r));
         }
 
-        public static List<Inline> FormatTag(string T)
+        public static (string, Block) FormatFirstBlock(string str)
         {
+            char[] blockTagChars = blockTags.Select(x => x.start[0]).Distinct().ToArray();
 
-        }
-
-        public static List<Block> FormatBlock(string B)
-        {
-            #region Format first block
-
-            // Assuming B contains a block
-
-            // Import lineEscapes
-            (string start, string end)[] pTags = paragraphTags;
+            // Return empty string if str contains no blockTags
+            if (!blockTags.Any(x => str.Contains(x.start)) )
+            {
+                return ("", new Paragraph());
+            }
 
             // Get open tag index
-            int openTagI = pTags.Select(x => B.IndexOf(x.start)).Where(x => x != -1).Min();
+            int openTagI = blockTags.Select(x => str.IndexOf(x.start)).Where(x => x != -1).Min();
 
             // Trim block
-            B = B.Substring(openTagI);
+            str = str.Substring(openTagI);
 
             // Get first char of open tag
-            char firstCharOfOpenTag = B[0];
+            char firstCharOfOpenTag = str[0];
 
-            // Switch for first char of open tag
+            // Switch for first char of open tag (cases terminate)
             switch (firstCharOfOpenTag)
             {
                 case '<':
                     {
-                        string openTag = B.GetBetween("<", ">");
+                        // Get tag name
+                        string tagName = blockTags.Where(x => str.IndexOf(x.start) == 0).First().start.Substring(1);
+
+                        // Determine fullTag
+                        string fullTag = str.GetBetweenInclusive("<", "</" + tagName + ">");
+
+                        // Get open tag
+                        string openTag = fullTag.GetBetweenInclusive("<", ">");
+
+                        // Get tag content
+                        string tagContent = fullTag.GetBetween(openTag, "</" + tagName + ">");
+
+                        // Switch for tag name
+                        switch (tagName)
+                        {
+                            case "blockquote": // Indented paragraph
+                            case "p": // Paragraph
+                            case "div": // Section (same as paragraph as far as i can see)
+                                {
+                                    // Create paragraph
+                                    Paragraph P = new Paragraph();
+
+                                    // Indent if blockquote
+                                    if (tagName == "blockquote")
+                                    {
+                                        P.Padding = new Thickness(50, 0, 0, 0);
+                                    }
+
+                                    // Class="class"
+                                    if (openTag.Contains("class="))
+                                    {
+                                        // Switch for class
+                                        switch (openTag.GetBetween("class=\"", "\""))
+                                        {
+                                            // Centered
+                                            case "center":
+                                                {
+                                                    P.TextAlignment = TextAlignment.Center;
+                                                    break;
+                                                }
+                                            // Monospaced centered
+                                            case "monospace center":
+                                                {
+                                                    // Centered
+                                                    P.TextAlignment = TextAlignment.Center;
+                                                    // Monospaced font
+                                                    P.FontFamily = new FontFamily("Courier New");
+                                                    // Reduced fontsize
+                                                    //P.FontSize *= 0.9;
+                                                    // Remove linespacing
+                                                    P.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                                                    P.LineHeight = P.FontSize + 3;
+                                                    // Special padding
+                                                    //P.Padding = new Thickness(0, 0, 0, 0);
+                                                    break;
+                                                }
+                                            // Monospaced
+                                            case "monospace":
+                                                {
+                                                    // Monospaced font
+                                                    P.FontFamily = new FontFamily("Courier New");
+                                                    // Reduced fontsize
+                                                    //P.FontSize *= 0.75;
+                                                    // Remove linespacing
+                                                    P.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                                                    P.LineHeight = P.FontSize + 3;
+                                                    // Special padding
+                                                    P.Padding = new Thickness(50, 0, 0, 0);
+                                                    break;
+                                                }
+                                            // Left margin
+                                            case "margin_left":
+                                                {
+                                                    P.Padding = new Thickness(50, 0, 0, 0);
+                                                    break;
+                                                }
+                                            // Note (nothing)
+                                            case "note":
+                                                {
+                                                    break;
+                                                }
+                                            // Smaller
+                                            case "smaller":
+                                                {
+                                                    P.FontSize *= 0.9;
+                                                    break;
+                                                }
+                                            // Unknown
+                                            default:
+                                                {
+                                                    throw new Exception($"Unkown class in: {str}");
+                                                }
+                                        }
+                                    }
+
+                                    // Format content and add to P
+                                    FormatLine(tagContent).ToList().ForEach(x => P.Inlines.Add(x));
+
+                                    // Return
+                                    return (str.Substring(fullTag.Length), P);
+                                }
+                            case "ul":
+                                {
+                                    // Create list
+                                    var contentList = new List
+                                    {
+                                        MarkerOffset = 10,
+                                        MarkerStyle = TextMarkerStyle.Disc,
+                                        Margin = new Thickness(30, 10, 10, 10)
+                                    };
+
+                                    // Put all <li> items into list
+                                    while (tagContent.Contains("<li>"))
+                                    {
+                                        int liCloseIndex = tagContent.IndexOf("</li>");
+
+                                        string liItem = tagContent.GetBetween("<li>", "</li>");
+                                        tagContent = tagContent.Remove(0, liCloseIndex + "</li>".Length);
+
+                                        var Par = new Paragraph();
+                                        FormatLine(liItem.Replace("<br />", "")).ForEach(x => Par.Inlines.Add(x));
+
+                                        var lItem = new ListItem(Par);
+                                        contentList.ListItems.Add(lItem);
+                                    }
+
+                                    // Add block to FD
+                                    return (str.Substring(fullTag.Length), contentList);
+                                }
+                            default:
+                                {
+                                    throw new Exception($"Unknown blockTag tagName: {tagName}");
+                                }
+                        }
                     }
-                    break;
                 case '$':
                     {
-
+                        // Get full tag
+                        string fullTag = str.GetBetweenInclusive("$$", "$$");
+                        // Create centered paragraph
+                        Paragraph P = new Paragraph()
+                        {
+                            TextAlignment = TextAlignment.Center
+                        };
+                        // Add formula to P
+                        P.Inlines.Add(GetFormulaControl(fullTag.GetBetween("$$","$$")));
+                        // Return
+                        return (str.Substring(fullTag.Length), P);
                     }
-                    break;
-            }
-
-            // Get full tag
-            var fullBlockTag = pTags.Where(x => B.Substring(openTagI, x.start.Length) == x.start).First();
-
-            // Get complete line
-            string fullLine = B.GetBetweenInclusive(fullBlockTag.start, fullBlockTag.end);
-
-            // Remove complete line
-            B = B.Remove(B.IndexOf(fullBlockTag.start), fullLine.Length);
-
-            // "<p" or "<div" or "<blockquote" (Paragraph line)
-            if (fullBlockTag == HTML.paragraphTags[0] || fullBlockTag == HTML.paragraphTags[2] || fullBlockTag == HTML.paragraphTags[3])
-            {
-                // Paragraph line
-                Paragraph P = new Paragraph()
-                {
-                    Margin = new Thickness(10)
-                };
-
-                // If line contains class
-                while (fullLine.Contains(fullBlockTag.start + " class"))
-                {
-                    // Get class
-                    string pClass = fullLine.GetBetween(" class=\"", "\"");
-                    // Remove class from line
-                    fullLine = fullLine.Replace(" class=\"" + pClass + "\"", "");
-                    // apply class
-                    switch (pClass)
+                default:
                     {
-                        // Horizontally centered
-                        case "center":
-                            {
-                                P.TextAlignment = TextAlignment.Center;
-                            }
-                            break;
-
-                        // Monospace + Horizontally centered
-                        case "monospace center":
-                            {
-                                P.TextAlignment = TextAlignment.Center;
-                                P.FontFamily = new FontFamily("Courier New");
-                                P.FontSize = 15;
-                                P.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-                                P.LineHeight = P.FontSize;
-                                //P.BorderBrush = new SolidColorBrush(Colors.Black);
-                                //P.BorderThickness = new Thickness(1);
-                                P.Padding = new Thickness(5, 10, 5, 5);
-                                // Need some way to make the paragraph shrink to its contents
-                            }
-                            break;
-
-                        case "monospace":
-                            {
-                                P.TextAlignment = TextAlignment.Left;
-                                P.FontFamily = new FontFamily("Courier New");
-                                P.FontSize = 15;
-                                P.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-                                P.LineHeight = P.FontSize;
-                                P.Padding = new Thickness(50, 5, 5, 0);
-                                // Need some way to make the paragraph shrink to its contents
-                            }
-                            break;
-
-                        case "margin_left":
-                            {
-                                P.Padding = new Thickness(50, 5, 5, 0);
-                            }
-                            break;
-
-                        case "note":
-                            {
-                                // Nothing?
-                            }
-                            break;
-
-                        // Unknown error
-                        default:
-                            {
-                                throw new Exception($"Unknown pClass ({pClass})");
-                            }
+                        throw new Exception($"Unknown block tag: {str}");
                     }
-                }
-
-                // <x> case completion (remove '>')
-                string lineContent = fullLine.GetBetween(fullBlockTag.start + ">", fullBlockTag.end);
-
-                // Format lines and add to P
-                HTML.FormatLine(lineContent).ForEach(x => P.Inlines.Add(x));
-
-                // Add paragraph to FD
-                FD.Blocks.Add(P);
             }
-
-            // "<ul" (unordered bulleted list)
-            else if (fullBlockTag == HTML.paragraphTags[4])
-            {
-                // Get line content
-                string lineContent = fullLine.GetBetween(fullBlockTag.start + ">", fullBlockTag.end);
-
-                // Create list
-                var contentList = new List
-                {
-                    MarkerOffset = 10,
-                    MarkerStyle = TextMarkerStyle.Disc,
-                    Margin = new Thickness(30, 10, 10, 10)
-                };
-
-                // Put all <li> items into list
-                while (lineContent.Contains("<li>"))
-                {
-                    int liOpenIndex = lineContent.IndexOf("<li>");
-                    int liCloseIndex = lineContent.IndexOf("</li>");
-
-                    string liItem = lineContent.GetBetween("<li>", "</li>");
-                    lineContent = lineContent.Remove(0, liCloseIndex + "</li>".Length);
-
-                    var Par = new Paragraph();
-                    HTML.FormatLine(liItem.Replace("<br />", "")).ForEach(x => Par.Inlines.Add(x));
-
-                    var lItem = new ListItem(Par);
-                    contentList.ListItems.Add(lItem);
-                }
-
-                // Add block to FD
-                FD.Blocks.Add(contentList);
-            }
-
-            // "$$" (Formula line)
-            else if (fullBlockTag == HTML.paragraphTags[1])
-            {
-                // Get raw line
-                string lineContent = fullLine.GetBetween(fullBlockTag.start, fullBlockTag.end);
-
-                // Set formula as child of P
-                FD.Blocks.Add(new Paragraph(HTML.GetFormulaControl(lineContent))
-                {
-                    TextAlignment = TextAlignment.Center
-                });
-            }
-
-            // Format rest of blocks
-
-            return new Block();
         }
 
         // Return the string as a list of Inlines
@@ -461,183 +459,50 @@ namespace Problems
                     {
                         // Inline formula
                         fullTag = line.GetBetweenInclusive("$", "$");
-                        string content = fullTag.GetBetween("$", "$");
 
-                        // Do something to content?
-                        inlines.Add(GetFormulaControl(content));
-
-                        // Remove tag from line
-                        line = line.Remove(0, fullTag.Length);
+                        // Add inline of formula
+                        inlines.Add(GetFormulaControl(fullTag.GetBetween("$", "$")));
 
                         break;
                     }
-
                 case '<':
                     {
-                        //
-                        bool tagContainsAttributes = line.Contains(" ") && line.GetBetween("<", ">").Length > line.GetBetween("<", " ").Length;
+                        // Get open tag
+                        string openTag = line.GetBetweenInclusive("<",">");
 
-                        // Get tag name ("img") for example
-                        string tagName;
-                        if (tagContainsAttributes) 
+                        // Switch for if tag is container
+                        switch (openTag.EndsWith("/>"))
                         {
-                            tagName = line.GetBetween("<", " ");
-                        }
-                        else
-                        {
-                            tagName = line.GetBetween("<", ">");
-                        }
-
-                        // Determine wether tag is a container
-                        bool tagIsContainer = line.IndexOf("/>") == -1 || line.IndexOf("/>") > line.IndexOf(">");
-
-                        // Determine fullTag (for removal from line later)
-                        if (tagIsContainer)
-                        {
-                            fullTag = line.GetBetweenInclusive("<","</" + tagName + ">");
-                        }
-                        else
-                        {
-                            fullTag = line.GetBetweenInclusive("<", "/>");
-                        }
-
-                        // Remove tag from line
-                        line = line.Remove(0, fullTag.Length);
-
-                        // Switch for containership
-                        switch (tagIsContainer)
-                        {
+                            // Non-container tag
                             case true:
                                 {
-                                    // Get tag content
-                                    string tagContent = fullTag.GetBetween(">", "</" + tagName + ">");
+                                    // Set fullTag
+                                    fullTag = openTag;
 
-                                    // Switch for tag name (known container tags)
+                                    // Get tag name
+                                    string tagName = openTag.Substring(1, new string[]
+                                    {
+                                        openTag.GetBetween("<", " "), openTag.GetBetween("<", "/>")
+                                    }.Min(x => x.Length));
+
+                                    // Switch for tag name
                                     switch (tagName)
                                     {
-                                        case "a": // Hyperlink
-                                            {
-                                                // Get link
-                                                string linkPath = "https://projecteuler.net/" + fullTag.GetBetween("href=\"", "\"");
-
-                                                // Add hyperlink
-                                                var HL = new Hyperlink(GetFinishedRun(tagContent))
-                                                {
-                                                    NavigateUri = new Uri(linkPath)
-                                                };
-                                                HL.RequestNavigate += (sender, e) =>
-                                                {
-                                                    System.Diagnostics.Process.Start(e.Uri.ToString());
-                                                };
-                                                inlines.Add(HL);
-                                            }
-                                            break;
-
-                                        case "b": // Bold text
-                                            {
-                                                // Add content
-                                                inlines.Add(new Bold(GetFinishedRun(tagContent)));
-                                            }
-                                            break;
-
-                                        case "dfn": // Italic text with tooltip
-                                            {
-                                                // Get tooltip
-                                                string tooltip = fullTag.GetBetween("title=\"", "\"");
-
-                                                // Add italic part with tooltip
-                                                inlines.Add(new Italic(GetFinishedRun(tagContent))
-                                                {
-                                                    ToolTip = new ToolTip()
-                                                    {
-                                                        Content = $" ({tooltip})"
-                                                    }
-                                                });
-                                            }
-                                            break;
-
-                                        case "sub": // Subscript
-                                            {
-                                                // Convert content to subscript
-                                                var content = FormatLine(tagContent);
-                                                content.ForEach(x => x.BaselineAlignment = BaselineAlignment.Subscript);
-                                                content.ForEach(x => x.FontSize *= 0.75);
-
-                                                //content.ForEach(x => Typography.SetVariants(x, FontVariants.Subscript));
-
-                                                // Add content
-                                                content.ForEach(x => inlines.Add(x));
-                                            }
-                                            break;
-
-                                        case "sup": // Superscript
-                                            {
-                                                // Convert content to subscript
-                                                var content = FormatLine(tagContent);
-                                                content.ForEach(x => x.BaselineAlignment = BaselineAlignment.TextTop);
-                                                content.ForEach(x => x.FontSize *= 0.75);
-
-                                                //content.ForEach(x => Typography.SetVariants(x, FontVariants.Superscript));
-
-                                                // Add content
-                                                content.ForEach(x => inlines.Add(x));
-                                            }
-                                            break;
-
-                                        case "span": // Color
-                                            {
-                                                // Getting color
-                                                string color = fullTag.GetBetween("<span class=\"", "\"");
-
-                                                // Switch for colors
-                                                switch (color) // Terminates
-                                                {
-                                                    case "red":
-                                                        {
-                                                            // Get content inlines
-                                                            List<Inline> contentInlines = FormatLine(tagContent);
-                                                            // Apply red
-                                                            contentInlines.ForEach(x => x.Foreground = new SolidColorBrush(Colors.Red));
-                                                            // Put inlines into inlines
-                                                            inlines = inlines.Concat(contentInlines).ToList();
-                                                        }
-                                                        break;
-
-                                                    default: // Unknown
-                                                        {
-                                                            throw new Exception($"Unknown span color: {color}");
-                                                        }
-
-                                                }
-                                            }
-                                            break;
-
-                                        case "i":
-                                        case "var":
-                                            {
-                                                // Add content as italic
-                                                inlines.Add(new Italic(GetFinishedRun(tagContent)));
-                                            }
-                                            break;
-                                    }
-                                }
-                                break;
-
-                            case false:
-                                {
-                                    // Switch for tag name (known container tags)
-                                    switch (tagName)
-                                    {
+                                        // Linebreak
                                         case "br":
                                             {
-                                                inlines.Add(new Run("\n"));
+                                                if (line.Substring(fullTag.Length) != "")
+                                                {
+                                                    inlines.Add(new Run("\n"));
+                                                }
+                                                
+                                                break;
                                             }
-                                            break;
-
-                                        case "img": // Image
+                                        // Image
+                                        case "img":
                                             {
                                                 // Content
-                                                string imagePath = "https://projecteuler.net/" + fullTag.GetBetween("\"","\"");
+                                                string imagePath = "https://projecteuler.net/" + fullTag.GetBetween("\"", "\"");
 
                                                 // Get image
                                                 BitmapImage BMI = new BitmapImage(new Uri(imagePath));
@@ -660,20 +525,236 @@ namespace Problems
                                                     Child = img
                                                 });
 
+                                                break;
                                             }
-                                            break;
+                                        default:
+                                            {
+                                                throw new Exception($"Unknown non-container tag: {fullTag}");
+                                            }
                                     }
+
+                                    break;
                                 }
-                                break;
+                            // Container tag
+                            case false:
+                                {
+                                    // Get tag name
+                                    string tagName = openTag.Substring(1, new string[]
+                                    {
+                                        openTag.GetBetween("<", " "), openTag.GetBetween("<", ">")
+                                    }.Where(x => x.Length > 0).Min(x => x.Length));
+
+                                    // Set fullTag
+                                    fullTag = line.GetBetweenInclusive(openTag, "</" + tagName + ">");
+
+                                    //// Throw error if tag contains tag with identical name
+                                    //if (fullTag.Contains("<" + tagName))
+                                    //{
+                                    //    throw new Exception($"Tag: {fullTag} contains tag with same tagName: {tagName}");
+                                    //}
+
+                                    // Get tag content
+                                    string tagContent = fullTag.GetBetween(openTag, "</" + tagName + ">");
+
+                                    // Switch for tag name (known container tags)
+                                    switch (tagName)
+                                    {
+                                        case "a": // Hyperlink
+                                            {
+                                                // Get link
+                                                string linkPath = "https://projecteuler.net/" + fullTag.GetBetween("href=\"", "\"");
+
+                                                // Add hyperlink
+                                                var HL = new Hyperlink(GetFinishedRun(tagContent))
+                                                {
+                                                    NavigateUri = new Uri(linkPath)
+                                                };
+                                                HL.RequestNavigate += (sender, e) =>
+                                                {
+                                                    System.Diagnostics.Process.Start(e.Uri.ToString());
+                                                };
+                                                inlines.Add(HL);
+
+                                                break;
+                                            }
+
+                                        case "b": // Bold text
+                                            {
+                                                // Add content
+                                                inlines.Add(new Bold(GetFinishedRun(tagContent)));
+
+                                                break;
+                                            }
+
+                                        case "dfn": // Italic text with tooltip
+                                            {
+                                                // Get tooltip
+                                                string tooltip = fullTag.GetBetween("title=\"", "\"");
+
+                                                // Add italic part with tooltip
+                                                inlines.Add(new Italic(GetFinishedRun(tagContent))
+                                                {
+                                                    ToolTip = new ToolTip()
+                                                    {
+                                                        Content = $" ({tooltip})"
+                                                    }
+                                                });
+
+                                                break;
+                                            }
+
+                                        case "sub": // Subscript
+                                            {
+                                                // Convert content to subscript
+                                                var content = FormatLine(tagContent);
+                                                content.ForEach(x => x.BaselineAlignment = BaselineAlignment.Subscript);
+                                                content.ForEach(x => x.FontSize *= 0.75);
+
+                                                //content.ForEach(x => Typography.SetVariants(x, FontVariants.Subscript));
+
+                                                // Add content
+                                                content.ForEach(x => inlines.Add(x));
+
+                                                break;
+                                            }
+
+                                        case "sup": // Superscript
+                                            {
+                                                // Convert content to subscript
+                                                var content = FormatLine(tagContent);
+                                                content.ForEach(x => x.BaselineAlignment = BaselineAlignment.TextTop);
+                                                content.ForEach(x => x.FontSize *= 0.75);
+
+                                                //content.ForEach(x => Typography.SetVariants(x, FontVariants.Superscript));
+
+                                                // Add content
+                                                content.ForEach(x => inlines.Add(x));
+
+                                                break;
+                                            }
+
+                                        case "span": // Color
+                                            {
+                                                // Getting color
+                                                string color = fullTag.GetBetween("<span class=\"", "\"");
+
+                                                // Get content inlines
+                                                List<Inline> contentInlines = FormatLine(tagContent);
+
+                                                // Switch for colors
+                                                switch (color) // Terminates
+                                                {
+                                                    case "red":
+                                                        {
+                                                            
+                                                            // Apply red
+                                                            contentInlines.ForEach(x => x.Foreground = new SolidColorBrush(Colors.Red));
+                                                        }
+                                                        break;
+                                                    case "red strong":
+                                                        {
+                                                            // Apply red and bold
+                                                            contentInlines.ForEach(x => x.Foreground = new SolidColorBrush(Colors.Red));
+                                                            contentInlines.ForEach(x => x.FontWeight = FontWeights.Bold);
+                                                            break;
+                                                        }
+                                                    default: // Unknown
+                                                        {
+                                                            throw new Exception($"Unknown span color: {color}");
+                                                        }
+                                                }
+
+                                                // Put inlines into inlines
+                                                inlines = inlines.Concat(contentInlines).ToList();
+
+                                                break;
+                                            }
+                                        // Italic
+                                        case "i":
+                                        case "var":
+                                            {
+                                                // Add content as italic
+                                                inlines.Add(new Italic(GetFinishedRun(tagContent)));
+
+                                                break;
+                                            }
+                                        // Table
+                                        case "table":
+                                            {
+                                                Grid G = new Grid();
+
+                                                // Go over rows
+                                                int curRow = 0;
+                                                while (tagContent.Contains("<tr>"))
+                                                {
+                                                    int curCol = 0;
+                                                    // Add row
+                                                    G.RowDefinitions.Add(new RowDefinition());
+                                                    // Get row
+                                                    string rowStr = tagContent.GetBetweenInclusive("<tr>", "</tr>");
+                                                    // Remove row
+                                                    tagContent = tagContent.Remove(0, rowStr.Length);
+
+                                                    while (rowStr.Contains("<td>"))
+                                                    {
+                                                        if (curCol >= G.ColumnDefinitions.Count)
+                                                        {
+                                                            G.ColumnDefinitions.Add(new ColumnDefinition());
+                                                        }
+
+                                                        string cellStr = rowStr.GetBetweenInclusive("<td>", "</td>");
+                                                        rowStr = rowStr.Remove(0, cellStr.Length);
+                                                        string cellStrContent = cellStr.GetBetween("<td>", "</td>");
+
+                                                        TextBlock TB = new TextBlock();
+                                                        FormatLine(cellStrContent).ForEach(x => TB.Inlines.Add(x));
+                                                        Grid.SetColumn(TB, curCol);
+                                                        Grid.SetRow(TB, curRow);
+                                                        G.Children.Add(TB);
+
+                                                        curCol++;
+                                                    }
+                                                    curRow++;
+                                                }
+
+                                                inlines.Add(new InlineUIContainer()
+                                                {
+                                                    Child = G
+                                                });
+
+                                                break;
+                                            }
+                                        // Section
+                                        case "div":
+                                            {
+                                                FormatLine(tagContent).ForEach(x => inlines.Add(x));
+
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                throw new Exception($"Unknown inline tag: {tagName}");
+                                            }
+                                    }
+
+                                    break;
+                                }
+                            default:
+                                {
+                                    throw new Exception($"If you're reading this, there is something very wrong");
+                                }
                         }
+
                         break;
                     }
-
                 default:
                     {
                         throw new Exception($"No known escape char: {tag.firstChar}");
                     }
             }
+
+            // Remove tag from line
+            line = line.Remove(0, fullTag.Length);
 
             // Format remainder and add to list
             if (line != "")

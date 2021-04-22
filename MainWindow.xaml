@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Euler_WPF"
         mc:Ignorable="d"
-        Title="EulerWPF" Height="600" Width="800" MinWidth="600" MinHeight="200">
+        Title="EulerWPF" Height="600" Width="1000" MinWidth="1000" MinHeight="300">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10"/>

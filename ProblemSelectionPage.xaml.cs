@@ -43,7 +43,7 @@ namespace Euler_WPF
             ProblemLoadingWorker.RunWorkerCompleted += ProblemLoadingWorker_RunWorkerCompleted;
             ProblemLoadingWorker.ProgressChanged += ProblemLoadingWorker_ProgressChanged;
 
-            ProblemData.LoadAtLeast(20);
+            ProblemData.LoadAtLeast(10);
             ProblemListBox_LoadAll();
         }
 
@@ -65,7 +65,7 @@ namespace Euler_WPF
                 Grid_Main.Children.Remove(currentProblemDFSV);
             }
 
-            currentProblemDFSV = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescriptionFDSV();
+            currentProblemDFSV = ProblemData.Problems[ProblemListBox.SelectedIndex + 1].GetDescriptionFDSV(ProblemListBox.SelectedIndex + 1);
             Grid.SetColumn(currentProblemDFSV, 1);
             Grid_Main.Children.Add(currentProblemDFSV);
         }
