@@ -119,10 +119,12 @@ namespace Euler_WPF
         // This function handles updating the UI when progress was made by the ProblemLoadingWorker
         private void ProblemLoadingWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            int loadPercent = (e.ProgressPercentage);
+            int loadPercent = (e.ProgressPercentage) + 5;
             Grid G = ((LoadTenMoreButton.Content as Border).Child as Grid);
             G.ColumnDefinitions[0].Width = new GridLength(loadPercent, GridUnitType.Star);
             G.ColumnDefinitions[1].Width = new GridLength(100 - loadPercent, GridUnitType.Star);
+
+            (LoadTenMoreButton.Content as Border).Width = (int)(LoadTenMoreButton.ActualWidth - LoadTenMoreButton.Padding.Left - LoadTenMoreButton.Padding.Right - 2);
 
             ProblemListBox_LoadAll();
         }
@@ -183,6 +185,9 @@ namespace Euler_WPF
             {
                 BorderBrush = new SolidColorBrush(Colors.Black),
                 BorderThickness = new Thickness(1),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Width = (int)(LoadTenMoreButton.ActualWidth - LoadTenMoreButton.Padding.Left - LoadTenMoreButton.Padding.Right)
             };
 
             Grid G = new Grid();
